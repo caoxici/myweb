@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章 · Vaughn.C LAB</title>
-    <!-- 引入 marked 解析 Markdown -->
+    <!-- 引入 marked -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         /* ===== 学术风格 · 宋体 · 深蓝渐变标题 ===== */
@@ -121,9 +121,10 @@
             display: flex;
             flex: 1;
             background: #ffffff;
+            align-items: flex-start;  /* 保证 sticky 正常工作 */
         }
 
-        /* 左侧目录 — 悬浮固定 */
+        /* 左侧目录 — sticky 跟随滚动 */
         .toc-sidebar {
             width: 260px;
             padding: 2rem 0 2rem 1.5rem;
@@ -135,6 +136,7 @@
             max-height: calc(100vh - 40px);
             overflow-y: auto;
             font-family: '宋体', 'SimSun', serif;
+            flex-shrink: 0;
         }
 
         .toc-title {
@@ -316,7 +318,7 @@
 </head>
 <body>
 <div class="article-wrapper">
-    <!-- 标题区：将从 Markdown 前几行提取 -->
+    <!-- 标题区 -->
     <header class="article-hero" id="article-hero">
         <h1 id="article-title">加载中…</h1>
         <h2 id="article-subtitle"></h2>
@@ -327,7 +329,7 @@
     </header>
 
     <div class="article-body-container">
-        <!-- 左侧目录 -->
+        <!-- 左侧目录（sticky） -->
         <nav class="toc-sidebar" id="toc-container">
             <div class="toc-title">📑 目录</div>
             <ul class="toc-list" id="toc-list">
@@ -385,54 +387,40 @@
         function parseMarkdownWithMeta(mdText) {
             const lines = mdText.split('\n');
             let title = '', subtitle = '', authors = '', date = '';
-            let contentStartIndex = 0;
+            
+            // 提取前四行（去除首尾空格）
+            if (lines.length > 0) title = lines[0].trim();
+            if (lines.length > 1) subtitle = lines[1].trim();
+            if (lines.length > 2) authors = lines[2].trim();
+            if (lines.length > 3) date = lines[3].trim();
 
-            // 第一行：主标题
-            if (lines.length > 0) {
-                title = lines[0].trim();
+            // 跳过前四行及紧随的空行，剩余为正文
+            let contentStartIndex = 4;
+            while (contentStartIndex < lines.length && lines[contentStartIndex].trim() === '') {
+                contentStartIndex++;
             }
-            // 第二行：副标题
-            if (lines.length > 1) {
-                subtitle = lines[1].trim();
-            }
-            // 第三行：作者
-            if (lines.length > 2) {
-                authors = lines[2].trim();
-            }
-            // 第四行：发布时间
-            if (lines.length > 3) {
-                date = lines[3].trim();
-            }
-
-            // 跳过可能的空行，找到正文开始（第6行以后，但为了容错，查找第一个非空且不是元数据的行）
-            let i = 4;
-            while (i < lines.length && lines[i].trim() === '') {
-                i++;
-            }
-            contentStartIndex = i;
-
-            // 正文内容（从 contentStartIndex 开始拼接）
             const contentLines = lines.slice(contentStartIndex);
             const content = contentLines.join('\n');
 
             return { title, subtitle, authors, date, content };
         }
 
-        // 生成目录（基于正文中的 h3-h6）
+        // 生成目录（基于正文中的 h3-h6），同时为标题添加 id
         function generateTOC(htmlContent) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = htmlContent;
             const headings = tempDiv.querySelectorAll('h3, h4, h5, h6');
             const tocItems = [];
+            
             headings.forEach((heading, index) => {
                 const level = heading.tagName.toLowerCase();
                 const text = heading.textContent.trim();
-                // 为每个标题添加 id，以便锚点跳转
-                const id = `section-${index}-${text.replace(/\s+/g, '-').slice(0,20)}`;
+                // 生成唯一 id
+                const id = `section-${index}-${text.replace(/\s+/g, '-').slice(0, 20)}`;
                 heading.id = id;
                 tocItems.push({ level, text, id });
             });
-            // 重新获取带有 id 的 HTML
+            
             const finalHtml = tempDiv.innerHTML;
             return { tocItems, finalHtml };
         }
@@ -463,7 +451,7 @@
             });
         }
 
-        // 高亮当前可视区域标题（可选）
+        // 高亮当前可视区域标题
         function setupIntersectionObserver() {
             const headings = document.querySelectorAll('h3, h4, h5, h6');
             if (headings.length === 0) return;
@@ -493,9 +481,7 @@
 
             try {
                 const response = await fetch(postUrl);
-                if (!response.ok) {
-                    throw new Error(`无法加载文章 (${response.status})`);
-                }
+                if (!response.ok) throw new Error(`无法加载文章 (${response.status})`);
                 const mdText = await response.text();
 
                 // 解析元数据与正文
@@ -508,7 +494,7 @@
                 authorsEl.innerHTML = authors ? `✍️ ${formatAuthors(authors)}` : '';
                 dateEl.textContent = date ? `📅 ${date}` : '';
 
-                // 将正文 Markdown 转换为 HTML
+                // 将正文 Markdown 转换为 HTML（marked 会自动处理标题语法）
                 let bodyHtml = marked.parse(content);
 
                 // 生成目录并注入 id
