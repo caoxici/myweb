@@ -4,7 +4,7 @@
         "date": "2026-03-10",
         "summary": "提出物理约束贝叶斯网络，提升极端降水归因可信度。",
         "filename": "2026-03-10-bayesian-climate.md",
-        "tag": "preprint","测试"
+        "tags": ["机器学习", "气候科学", "不确定性"],
         "author": "Vaughn Chen"
     },
     {
@@ -12,31 +12,15 @@
         "date": "2026-02-18",
         "summary": "基于持续同调构建细胞分化高阶表征。",
         "filename": "2026-02-18-topology-scrna.md",
-        "tag": "research",
-        "author": "Vaughn Chen"
+        "tags": ["生物信息学", "拓扑数据分析", "单细胞"],
+        "author": "Vaughn Chen, L. Wang"
     },
     {
         "title": "Transformer加速分子动力学模拟",
         "date": "2025-12-05",
         "summary": "等变注意力势能面模型，效率提升两个量级。",
         "filename": "2025-12-05-transformer-md.md",
-        "tag": "paper",
+        "tags": ["分子动力学", "深度学习", "Transformer"],
         "author": "J. Li, Vaughn Chen"
-    },
-    {
-        "title": "量子近似优化在金融组合中的噪声鲁棒性",
-        "date": "2025-09-19",
-        "summary": "IBM量子硬件实验验证浅层QAOA抗噪能力。",
-        "filename": "2025-09-19-qaoa-finance.md",
-        "tag": "quantum",
-        "author": "M. Zhang, Vaughn Chen"
-    },
-    {
-        "title": "城市碳排放反演：从卫星柱浓度到通量",
-        "date": "2025-08-22",
-        "summary": "OCO-3与WRF-Chem联合反演洛杉矶排放。",
-        "filename": "2025-08-22-carbon-inversion.md",
-        "tag": "environment",
-        "author": "Vaughn Chen, S. Wu"
     }
 ]
