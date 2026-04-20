@@ -1,26 +1,10 @@
 [
     {
-        "title": "贝叶斯深度学习在气候归因中的不确定性量化",
-        "date": "2026-03-10",
-        "summary": "提出物理约束贝叶斯网络，提升极端降水归因可信度。",
-        "filename": "2026-03-10-bayesian-climate.md",
-        "tags": ["机器学习", "气候科学", "不确定性"],
-        "author": "Vaughn Chen"
-    },
-    {
-        "title": "单细胞拓扑数据分析揭示发育轨迹",
-        "date": "2026-02-18",
-        "summary": "基于持续同调构建细胞分化高阶表征。",
-        "filename": "2026-02-18-topology-scrna.md",
-        "tags": ["生物信息学", "拓扑数据分析", "单细胞"],
-        "author": "Vaughn Chen, L. Wang"
-    },
-    {
-        "title": "Transformer加速分子动力学模拟",
-        "date": "2025-12-05",
-        "summary": "等变注意力势能面模型，效率提升两个量级。",
-        "filename": "2025-12-05-transformer-md.md",
-        "tags": ["分子动力学", "深度学习", "Transformer"],
-        "author": "J. Li, Vaughn Chen"
+        "title": "班级工作检查工具：从命令行到可视化界面的开发历程",
+        "date": "2026-04-21",
+        "summary": "在高校班级管理工作中，教师经常面临两个核心挑战：“表格填写统计”和“作业图片收集”。传统的人工统计方式不仅耗时耗力，而且容易出错。",
+        "filename": "2026-4-21-班级工作检查工具开发文章.md",
+        "tags": ["人工智能", "渐进式改进", "python开发"],
+        "author": "Vaughn C, OpenClaw"
     }
 ]
