@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章 · Vaughn.C LAB</title>
+    <!-- 引入 marked 解析 Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* ===== 学术风格 · 宋体 · 深蓝渐变标题 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #eef3f9;
+            font-family: '宋体', 'SimSun', 'Times New Roman', serif;
+            color: #1a2e3f;
+            line-height: 1.7;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .article-wrapper {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 12px 30px rgba(0, 20, 50, 0.08);
+            overflow: hidden;
+            border: 1px solid #d9e6f5;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 深蓝渐变标题区 */
+        .article-hero {
+            background: linear-gradient(145deg, #0b1e2e 0%, #1c3c5e 70%, #234e77 100%);
+            padding: 2.5rem 3rem 2rem 3rem;
+            color: white;
+            border-bottom: 1px solid #2e577a;
+            position: relative;
+        }
+
+        .article-hero::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 3rem;
+            right: 3rem;
+            height: 2px;
+            background: linear-gradient(90deg, #6da5d3, #aac9e4, transparent);
+            opacity: 0.5;
+        }
+
+        .article-hero h1 {
+            font-size: 2.8rem;
+            font-weight: 600;
+            font-family: '宋体', 'SimSun', serif;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+            line-height: 1.3;
+        }
+
+        .article-hero h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #d3e6ff;
+            margin-top: 0.25rem;
+            border-left: 5px solid #6ea8dc;
+            padding-left: 1.5rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .article-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-top: 1.2rem;
+        }
+
+        .authors-line {
+            font-size: 1.1rem;
+            color: #c0daf5;
+        }
+
+        .author-link {
+            color: #b6d9fc;
+            text-decoration: none;
+            font-weight: 500;
+            margin-right: 4px;
+            border-bottom: 1px dotted transparent;
+            transition: border-color 0.1s, color 0.1s;
+        }
+
+        .author-link:hover {
+            color: white;
+            border-bottom-color: #8bb9e0;
+        }
+
+        .publish-date {
+            font-size: 1rem;
+            color: #c0daf5;
+            background: rgba(255,255,255,0.08);
+            padding: 0.2rem 1.2rem;
+            border-radius: 30px;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        /* 主体区域：左侧目录 + 右侧正文 */
+        .article-body-container {
+            display: flex;
+            flex: 1;
+            background: #ffffff;
+        }
+
+        /* 左侧目录 — 悬浮固定 */
+        .toc-sidebar {
+            width: 260px;
+            padding: 2rem 0 2rem 1.5rem;
+            background: #f8fbfe;
+            border-right: 1px solid #d0e0ee;
+            position: sticky;
+            top: 20px;
+            align-self: flex-start;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .toc-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1c405b;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #b3cee5;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc-item {
+            margin-bottom: 0.4rem;
+            line-height: 1.4;
+        }
+
+        .toc-link {
+            color: #2a5570;
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.25rem 0.5rem;
+            border-left: 3px solid transparent;
+            transition: all 0.1s;
+        }
+
+        .toc-link:hover {
+            color: #0a3147;
+            background: #e3effa;
+            border-left-color: #1f6eb0;
+        }
+
+        .toc-link.active {
+            color: #1a5e8c;
+            font-weight: 600;
+            border-left-color: #1f6eb0;
+            background: #e3effa;
+        }
+
+        /* 层级缩进 */
+        .toc-level-H3 { padding-left: 0.5rem; }
+        .toc-level-H4 { padding-left: 1.5rem; font-size: 0.9rem; }
+        .toc-level-H5 { padding-left: 2.5rem; font-size: 0.85rem; }
+        .toc-level-H6 { padding-left: 3.5rem; font-size: 0.8rem; color: #436684; }
+
+        /* 正文区域 */
+        .article-content {
+            flex: 1;
+            padding: 2.5rem 3rem 3rem 3rem;
+            max-width: 900px;
+            font-family: '宋体', 'SimSun', serif;
+            color: #1e2f3c;
+        }
+
+        /* Markdown 渲染后的样式 */
+        .article-content h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem 0;
+            color: #0a3147;
+            border-bottom: 1px solid #cbdde9;
+            padding-bottom: 0.4rem;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .article-content h4 {
+            font-size: 1.5rem;
+            font-weight: 550;
+            margin: 1.8rem 0 0.8rem 0;
+            color: #1c405b;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .article-content h5 {
+            font-size: 1.3rem;
+            font-weight: 550;
+            margin: 1.5rem 0 0.6rem 0;
+            color: #234e6b;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .article-content h6 {
+            font-size: 1.15rem;
+            font-weight: 550;
+            margin: 1.2rem 0 0.5rem 0;
+            color: #2c5a7a;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .article-content p {
+            margin-bottom: 1.2rem;
+            text-align: justify;
+        }
+
+        .article-content ul, .article-content ol {
+            margin: 0.8rem 0 1.2rem 2rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.3rem;
+        }
+
+        .article-content code {
+            background: #ecf3fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+        }
+
+        .article-content pre {
+            background: #f0f6fc;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.2rem 0;
+            border-left: 4px solid #6ea8dc;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid #7aa5c2;
+            padding-left: 1.2rem;
+            color: #2b5570;
+            font-style: italic;
+            margin: 1.2rem 0;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #2a6a9c;
+            text-decoration: none;
+            font-size: 1rem;
+            border-bottom: 1px dotted #7aa5c2;
+            font-family: '宋体', 'SimSun', serif;
+        }
+
+        .back-link:hover {
+            color: #0a3147;
+        }
+
+        .loading, .error {
+            text-align: center;
+            padding: 4rem;
+            color: #436684;
+            font-style: italic;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .article-body-container {
+                flex-direction: column;
+            }
+            .toc-sidebar {
+                width: 100%;
+                position: static;
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid #d0e0ee;
+                padding: 1.5rem 1.5rem 1rem 1.5rem;
+            }
+            .article-content {
+                padding: 1.5rem;
+            }
+            .article-hero {
+                padding: 1.8rem 1.5rem;
+            }
+            .article-hero h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="article-wrapper">
+    <!-- 标题区：将从 Markdown 前几行提取 -->
+    <header class="article-hero" id="article-hero">
+        <h1 id="article-title">加载中…</h1>
+        <h2 id="article-subtitle"></h2>
+        <div class="article-meta-row">
+            <div class="authors-line" id="article-authors"></div>
+            <div class="publish-date" id="article-date"></div>
+        </div>
+    </header>
+
+    <div class="article-body-container">
+        <!-- 左侧目录 -->
+        <nav class="toc-sidebar" id="toc-container">
+            <div class="toc-title">📑 目录</div>
+            <ul class="toc-list" id="toc-list">
+                <li class="toc-item">加载中…</li>
+            </ul>
+        </nav>
+
+        <!-- 正文渲染区 -->
+        <main class="article-content" id="article-body">
+            <div class="loading">⏳ 正在加载文章…</div>
+        </main>
+    </div>
+    <div style="padding: 0 3rem 2rem 3rem;">
+        <a href="/myweb/" class="back-link">← 返回首页</a>
+    </div>
+</div>
+
+<script>
+    (function() {
+        "use strict";
+
+        // 获取 URL 参数中的文章文件名
+        const params = new URLSearchParams(window.location.search);
+        const postFile = params.get('post');
+        if (!postFile) {
+            document.getElementById('article-title').textContent = '错误';
+            document.getElementById('article-body').innerHTML = '<div class="error">未指定文章</div>';
+            return;
+        }
+
+        const postUrl = `/myweb/post/${postFile}`;
+
+        // 辅助函数：转义 HTML
+        function escapeHtml(text) {
+            if (!text) return text;
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // 格式化作者链接
+        function formatAuthors(authorString) {
+            if (!authorString) return '';
+            const authors = authorString.split(',').map(a => a.trim()).filter(a => a);
+            const links = authors.map(author => {
+                return `<a href="/myweb/author.html?name=${encodeURIComponent(author)}" class="author-link">${escapeHtml(author)}</a>`;
+            });
+            return links.join('<span class="author-separator" style="margin:0 4px;color:#8aa0b5;">, </span>');
+        }
+
+        // 解析 Markdown 前四行元数据，返回 { title, subtitle, authors, date, content }
+        function parseMarkdownWithMeta(mdText) {
+            const lines = mdText.split('\n');
+            let title = '', subtitle = '', authors = '', date = '';
+            let contentStartIndex = 0;
+
+            // 第一行：主标题
+            if (lines.length > 0) {
+                title = lines[0].trim();
+            }
+            // 第二行：副标题
+            if (lines.length > 1) {
+                subtitle = lines[1].trim();
+            }
+            // 第三行：作者
+            if (lines.length > 2) {
+                authors = lines[2].trim();
+            }
+            // 第四行：发布时间
+            if (lines.length > 3) {
+                date = lines[3].trim();
+            }
+
+            // 跳过可能的空行，找到正文开始（第6行以后，但为了容错，查找第一个非空且不是元数据的行）
+            let i = 4;
+            while (i < lines.length && lines[i].trim() === '') {
+                i++;
+            }
+            contentStartIndex = i;
+
+            // 正文内容（从 contentStartIndex 开始拼接）
+            const contentLines = lines.slice(contentStartIndex);
+            const content = contentLines.join('\n');
+
+            return { title, subtitle, authors, date, content };
+        }
+
+        // 生成目录（基于正文中的 h3-h6）
+        function generateTOC(htmlContent) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            const headings = tempDiv.querySelectorAll('h3, h4, h5, h6');
+            const tocItems = [];
+            headings.forEach((heading, index) => {
+                const level = heading.tagName.toLowerCase();
+                const text = heading.textContent.trim();
+                // 为每个标题添加 id，以便锚点跳转
+                const id = `section-${index}-${text.replace(/\s+/g, '-').slice(0,20)}`;
+                heading.id = id;
+                tocItems.push({ level, text, id });
+            });
+            // 重新获取带有 id 的 HTML
+            const finalHtml = tempDiv.innerHTML;
+            return { tocItems, finalHtml };
+        }
+
+        // 渲染目录到侧边栏
+        function renderTOC(items) {
+            const tocList = document.getElementById('toc-list');
+            if (items.length === 0) {
+                tocList.innerHTML = '<li class="toc-item" style="color:#6f8aa3;">无目录</li>';
+                return;
+            }
+            let html = '';
+            items.forEach(item => {
+                html += `<li class="toc-item"><a class="toc-link toc-level-${item.level.toUpperCase()}" href="#${item.id}">${escapeHtml(item.text)}</a></li>`;
+            });
+            tocList.innerHTML = html;
+
+            // 添加点击平滑滚动
+            document.querySelectorAll('.toc-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        }
+
+        // 高亮当前可视区域标题（可选）
+        function setupIntersectionObserver() {
+            const headings = document.querySelectorAll('h3, h4, h5, h6');
+            if (headings.length === 0) return;
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const id = entry.target.id;
+                    const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                    if (tocLink) {
+                        if (entry.isIntersecting) {
+                            tocLink.classList.add('active');
+                        } else {
+                            tocLink.classList.remove('active');
+                        }
+                    }
+                });
+            }, { rootMargin: '-20px 0px -80% 0px' });
+            headings.forEach(h => observer.observe(h));
+        }
+
+        // 加载并渲染文章
+        async function loadAndRender() {
+            const titleEl = document.getElementById('article-title');
+            const subtitleEl = document.getElementById('article-subtitle');
+            const authorsEl = document.getElementById('article-authors');
+            const dateEl = document.getElementById('article-date');
+            const bodyEl = document.getElementById('article-body');
+
+            try {
+                const response = await fetch(postUrl);
+                if (!response.ok) {
+                    throw new Error(`无法加载文章 (${response.status})`);
+                }
+                const mdText = await response.text();
+
+                // 解析元数据与正文
+                const { title, subtitle, authors, date, content } = parseMarkdownWithMeta(mdText);
+
+                // 更新标题区
+                document.title = `${title} · Vaughn.C LAB`;
+                titleEl.textContent = title || '未命名文章';
+                subtitleEl.textContent = subtitle || '';
+                authorsEl.innerHTML = authors ? `✍️ ${formatAuthors(authors)}` : '';
+                dateEl.textContent = date ? `📅 ${date}` : '';
+
+                // 将正文 Markdown 转换为 HTML
+                let bodyHtml = marked.parse(content);
+
+                // 生成目录并注入 id
+                const { tocItems, finalHtml } = generateTOC(bodyHtml);
+                bodyEl.innerHTML = finalHtml;
+
+                // 渲染目录
+                renderTOC(tocItems);
+
+                // 设置交叉观察器高亮目录
+                setupIntersectionObserver();
+
+                // 如果没有正文，显示提示
+                if (!content.trim()) {
+                    bodyEl.innerHTML = '<p style="color:#6f8aa3; font-style:italic;">本文暂无正文内容。</p>';
+                }
+
+            } catch (error) {
+                console.error(error);
+                titleEl.textContent = '加载失败';
+                bodyEl.innerHTML = `<div class="error">⚠️ 文章加载失败：${escapeHtml(error.message)}</div>`;
+                document.getElementById('toc-list').innerHTML = '<li>—</li>';
+            }
+        }
+
+        loadAndRender();
+    })();
+</script>
+</body>
+</html>
