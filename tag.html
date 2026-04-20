@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签 · Vaughn.C LAB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #eef3f9;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            color: #1a2e3f;
+            line-height: 1.6;
+            padding: 2rem 1.2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 12px 30px rgba(0,20,50,0.08);
+            overflow: hidden;
+            border: 1px solid #d9e6f5;
+            flex: 1;
+        }
+        .hero {
+            background: linear-gradient(145deg, #0b1e2e 0%, #1c3c5e 70%, #234e77 100%);
+            padding: 2.5rem 3rem;
+            color: white;
+            border-bottom: 1px solid #2e577a;
+        }
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 500;
+            font-family: 'Georgia', serif;
+        }
+        .hero .subhead {
+            font-size: 1.2rem;
+            color: #d3e6ff;
+            margin-top: 0.5rem;
+        }
+        .content {
+            padding: 2.5rem 2.8rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: #2a6a9c;
+            text-decoration: none;
+            font-size: 1rem;
+            border-bottom: 1px dotted #7aa5c2;
+        }
+        .back-link:hover { color: #0a3147; }
+        .article-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+        .article-card {
+            padding: 1.2rem 1.8rem;
+            background: #ffffff;
+            border-left: 5px solid #9bbfda;
+            border-radius: 0 12px 12px 0;
+            border-bottom: 1px solid #e2ecf5;
+        }
+        .article-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem 1.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .article-date { color: #2b6a9c; font-weight: 600; }
+        .article-title { font-size: 1.3rem; margin: 0.3rem 0 0.2rem; }
+        .article-title a {
+            color: #0a3147;
+            text-decoration: none;
+            font-family: 'Georgia', serif;
+        }
+        .article-title a:hover { color: #1a66b3; }
+        .status-box { text-align: center; padding: 3rem; color: #436684; }
+        .tag-badge {
+            background: #e3f0fd;
+            color: #1f5680;
+            padding: 0.1rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-right: 0.3rem;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="hero">
+        <h1 id="tag-title">🏷️ 标签</h1>
+        <div class="subhead">Vaughn.C LAB · 相关文章</div>
+    </header>
+    <div class="content">
+        <a href="/myweb/" class="back-link">← 返回首页</a>
+        <div id="tag-container" class="article-list">
+            <div class="status-box">⏳ 加载中…</div>
+        </div>
+    </div>
+</div>
+<script>
+    (function() {
+        const container = document.getElementById('tag-container');
+        const titleEl = document.getElementById('tag-title');
+        const params = new URLSearchParams(window.location.search);
+        const targetTag = params.get('tag') ? decodeURIComponent(params.get('tag')).trim() : '';
+
+        if (!targetTag) {
+            titleEl.textContent = '未指定标签';
+            container.innerHTML = '<div class="status-box">请通过标签链接访问</div>';
+            return;
+        }
+        titleEl.textContent = `🏷️ ${targetTag} · 相关文章`;
+
+        function escapeHtml(text) {
+            if (!text) return text;
+            return String(text).replace(/[&<>"']/g, function(m) {
+                return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[m];
+            });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+            return dateStr;
+        }
+
+        function formatAuthors(authorString) {
+            if (!authorString) return '未知作者';
+            const authors = authorString.split(',').map(a => a.trim()).filter(a => a);
+            return authors.map(a => `<a href="/myweb/author.html?name=${encodeURIComponent(a)}" style="color:#1a5e8c; text-decoration:none;">${escapeHtml(a)}</a>`).join(', ');
+        }
+
+        function formatTags(tags, currentTag) {
+            if (!tags || !Array.isArray(tags)) return '';
+            return tags.map(t => {
+                const isCurrent = (t === currentTag);
+                return `<span class="tag-badge" style="${isCurrent ? 'background:#b3cee5; font-weight:600;' : ''}">#${escapeHtml(t)}</span>`;
+            }).join('');
+        }
+
+        async function loadTagArticles() {
+            try {
+                const resp = await fetch('/myweb/posts.json?t=' + Date.now());
+                if (!resp.ok) throw new Error('无法获取文章数据');
+                const data = await resp.json();
+                if (!Array.isArray(data)) throw new Error('数据格式错误');
+
+                const filtered = data.filter(item => {
+                    const tags = item.tags || (item.tag ? [item.tag] : []);
+                    return tags.includes(targetTag);
+                });
+
+                const sorted = filtered.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+                if (sorted.length === 0) {
+                    container.innerHTML = `<div class="status-box">📭 暂无带有标签 “${escapeHtml(targetTag)}” 的文章</div>`;
+                    return;
+                }
+
+                let html = '';
+                sorted.forEach(item => {
+                    const title = item.title || '无标题';
+                    const date = formatDate(item.date);
+                    const filename = item.filename || '';
+                    const articleUrl = filename ? `/myweb/article.html?post=${encodeURIComponent(filename)}` : '#';
+                    const authors = formatAuthors(item.author);
+                    const tagsHtml = formatTags(item.tags || [item.tag], targetTag);
+
+                    html += `
+                        <article class="article-card">
+                            <div class="article-meta">
+                                <span class="article-date">📅 ${date}</span>
+                                <span>✍️ ${authors}</span>
+                                <div>${tagsHtml}</div>
+                            </div>
+                            <h3 class="article-title"><a href="${escapeHtml(articleUrl)}" target="_blank">${escapeHtml(title)}</a></h3>
+                        </article>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = '<div class="status-box">⚠️ 加载失败，请稍后重试</div>';
+                console.error(e);
+            }
+        }
+
+        loadTagArticles();
+    })();
+</script>
+</body>
+</html>
