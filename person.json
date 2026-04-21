@@ -1,0 +1,23 @@
+[
+    {
+        "name": "Vaughn Chen",
+        "title": "首席研究员 · 人工智能方向",
+        "date": "2026/4/21",
+        "filename": "vaughn-chen.md",
+        "summary": "实验室创始人，从事机器学习与气候科学交叉研究。"
+    },
+    {
+        "name": "Jane Li",
+        "title": "高级研究员 · 量子计算",
+        "date": "2026/4/20",
+        "filename": "jane-li.md",
+        "summary": "聚焦量子算法与优化理论，曾获 IBM Quantum Award。"
+    },
+    {
+        "name": "Ming Zhang",
+        "title": "博士后 · 计算材料学",
+        "date": "2026/4/19",
+        "filename": "ming-zhang.md",
+        "summary": "第一性原理计算与机器学习势函数开发。"
+    }
+]
