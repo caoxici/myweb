@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全部成员 · Vaughn.C LAB</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#eef3f9; font-family:'Segoe UI','Roboto',sans-serif; color:#1a2e3f; line-height:1.6; padding:2rem 1.2rem; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+        .container { width:100%; max-width:1300px; margin:0 auto; background:#fff; border-radius:24px; box-shadow:0 12px 30px rgba(0,20,50,0.08); overflow:hidden; border:1px solid #d9e6f5; flex:1; }
+        .hero { background:linear-gradient(145deg,#0b1e2e 0%,#1c3c5e 70%,#234e77 100%); padding:2.5rem 3rem; color:#fff; border-bottom:1px solid #2e577a; }
+        .hero h1 { font-size:2.8rem; font-weight:500; font-family:'Georgia',serif; }
+        .hero .subhead { font-size:1.2rem; color:#d3e6ff; margin-top:0.5rem; }
+        .content { padding:2.5rem 2.8rem; }
+        .back-link { display:inline-block; margin-bottom:2rem; color:#2a6a9c; text-decoration:none; font-size:1rem; border-bottom:1px dotted #7aa5c2; }
+        .people-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:1.5rem; }
+        .person-card { background:#f9fcff; border-radius:12px; padding:1.2rem 1rem; border:1px solid #d9e6f5; transition:0.2s; text-align:center; }
+        .person-card:hover { box-shadow:0 6px 12px rgba(26,67,113,0.06); border-color:#aac9e4; }
+        .person-name { font-size:1.1rem; font-weight:600; color:#0a3147; margin-bottom:0.3rem; }
+        .person-name a { text-decoration:none; color:inherit; }
+        .person-name a:hover { color:#1f6eb0; }
+        .person-title { font-size:0.85rem; color:#4a789c; margin-bottom:0.6rem; }
+        .person-summary { font-size:0.85rem; color:#2b445c; }
+        .status-box { text-align:center; padding:3rem; color:#436684; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="hero">
+        <h1>👥 研究团队</h1>
+        <div class="subhead">Vaughn.C LAB · 全部成员</div>
+    </header>
+    <div class="content">
+        <a href="/myweb/" class="back-link">← 返回首页</a>
+        <div id="people-grid" class="people-grid">
+            <div class="status-box">⏳ 加载中…</div>
+        </div>
+    </div>
+</div>
+<script>
+    (function(){
+        const grid = document.getElementById('people-grid');
+        function escapeHtml(t){ return t?String(t).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])):t; }
+        async function load(){
+            try{
+                const res = await fetch('/myweb/person.json?t='+Date.now());
+                const data = await res.json();
+                if(!Array.isArray(data)||!data.length){ grid.innerHTML='<div class="status-box">暂无成员</div>'; return; }
+                let html='';
+                data.forEach(p=>{
+                    const name=p.name||'未知', title=p.title||'', summary=p.summary||'', filename=p.filename||'';
+                    const url = filename?`/myweb/person.html?file=${encodeURIComponent(filename)}`:'#';
+                    html+=`<div class="person-card">
+                        <div class="person-name"><a href="${escapeHtml(url)}">${escapeHtml(name)}</a></div>
+                        <div class="person-title">${escapeHtml(title)}</div>
+                        <div class="person-summary">${escapeHtml(summary)}</div>
+                    </div>`;
+                });
+                grid.innerHTML=html;
+            }catch(e){ grid.innerHTML='<div class="status-box">⚠️ 加载失败</div>'; }
+        }
+        load();
+    })();
+</script>
+</body>
+</html>
