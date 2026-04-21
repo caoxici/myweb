@@ -103,6 +103,7 @@
             color: white;
             border-bottom: 1px solid #2e577a;
             position: relative;
+            overflow: visible;      /* 防止裁剪花体下降部分 */
         }
         .hero::after {
             content: "";
@@ -137,13 +138,13 @@
             overflow: hidden;
             width: fit-content;
             max-width: 100%;
-            line-height: 1.4;           /* 增加行高，防止花体字被裁剪 */
+            line-height: 1.6;           /* 增大行高，确保花体完整显示 */
         }
 
-        /* 动画结束后移除光标，并取消 overflow 限制以完整显示字体 */
+        /* 动画结束后移除光标，并强制溢出可见 */
         .typewriter h1.typed {
             border-right: none;
-            overflow: visible;
+            overflow: visible !important;
         }
 
         /* 连笔品牌名 */
@@ -153,17 +154,29 @@
             letter-spacing: 1px;
             text-shadow: 2px 2px 3px rgba(0,0,0,0.4), -1px -1px 0 rgba(255,255,255,0.1);
             display: inline-block;
-            margin-right: 0.2em;        /* 增加与 LAB 的间距 */
+            margin-right: 0.2em;
         }
 
         /* LAB 部分缩小，突出 Vaughn.C */
         .brand-lab {
             font-family: 'Georgia', 'Times New Roman', serif;
-            font-size: 0.55em;          /* 进一步缩小 */
+            font-size: 0.55em;
             font-weight: 300;
             letter-spacing: 2px;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
             display: inline-block;
+        }
+
+        /* 副标题 —— 增加与主标题的间距 */
+        .subhead {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #d3e6ff;
+            margin-top: 1.2rem;         /* 拉大垂直距离 */
+            border-left: 5px solid #6ea8dc;
+            padding-left: 1.5rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            letter-spacing: 1px;
         }
 
         @keyframes gradientFlow {
@@ -211,6 +224,10 @@
             .brand-cursive {
                 font-size: 1.1em;
             }
+            .subhead {
+                margin-top: 0.8rem;
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -227,7 +244,7 @@
     </header>
 
     <div class="content">
-        <!-- 开发团队栏目（位于近期文章上方） -->
+        <!-- 开发团队栏目 -->
         <div class="team-section">
             <div class="team-header">
                 <h2>🛠️ 开发团队</h2>
