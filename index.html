@@ -121,12 +121,12 @@
         }
 
         .typewriter h1 {
-            font-size: 4.2rem;      /* 基础字号，内部 span 可独立控制 */
+            font-size: 4.2rem;
             font-weight: 500;
             font-family: 'Georgia', 'Times New Roman', serif;
             text-shadow: 0 2px 8px rgba(0,0,0,0.3);
             margin-bottom: 0.5rem;
-            color: transparent;      /* 文字透明以显示背景渐变 */
+            color: transparent;
             background: linear-gradient(135deg, #ffffff 0%, #b6d9fc 30%, #e0f0ff 50%, #ffffff 70%, #aac9e4 100%);
             background-size: 300% 300%;
             -webkit-background-clip: text;
@@ -137,27 +137,29 @@
             overflow: hidden;
             width: fit-content;
             max-width: 100%;
-            line-height: 1.2;
+            line-height: 1.4;           /* 增加行高，防止花体字被裁剪 */
         }
 
-        /* 动画结束后移除光标 */
+        /* 动画结束后移除光标，并取消 overflow 限制以完整显示字体 */
         .typewriter h1.typed {
             border-right: none;
+            overflow: visible;
         }
 
         /* 连笔品牌名 */
         .brand-cursive {
             font-family: 'Pacifico', cursive;
-            font-size: 1.15em;      /* 相对父级更大 */
+            font-size: 1.15em;
             letter-spacing: 1px;
             text-shadow: 2px 2px 3px rgba(0,0,0,0.4), -1px -1px 0 rgba(255,255,255,0.1);
             display: inline-block;
+            margin-right: 0.2em;        /* 增加与 LAB 的间距 */
         }
 
-        /* LAB 部分稍小，保留衬线体 */
+        /* LAB 部分缩小，突出 Vaughn.C */
         .brand-lab {
             font-family: 'Georgia', 'Times New Roman', serif;
-            font-size: 0.75em;
+            font-size: 0.55em;          /* 进一步缩小 */
             font-weight: 300;
             letter-spacing: 2px;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
@@ -204,6 +206,7 @@
                 color: white;
                 background: none;
                 text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                overflow: visible;
             }
             .brand-cursive {
                 font-size: 1.1em;
@@ -252,7 +255,6 @@
             <span>Vaughn.C LAB · 开放学术 · </span>
             <a href="/myweb/">首页</a> · 
             <span id="refresh-note">更新数据即刻刷新</span>
-            <!-- 版权信息将动态插入此处 -->
             <div id="copyright-notice" class="copyright"></div>
         </footer>
     </div>
@@ -262,7 +264,7 @@
     (function() {
         "use strict";
 
-        // 设置动态版权年份（修正版）
+        // 动态版权年份
         function setCopyright() {
             const currentYear = new Date().getFullYear();
             const startYear = 2026;
@@ -270,16 +272,14 @@
             if (currentYear <= startYear) {
                 copyrightText = `© ${startYear} Vaughn.C LAB. All Rights Reserved.`;
             } else {
-                copyrightText = `Copyright © ${startYear}-${currentYear} Vaughn.C LAB. All Rights Reserved.`;
+                copyrightText = `© ${startYear}–${currentYear} Vaughn.C LAB. All Rights Reserved.`;
             }
             const copyrightEl = document.getElementById('copyright-notice');
-            if (copyrightEl) {
-                copyrightEl.textContent = copyrightText;
-            }
+            if (copyrightEl) copyrightEl.textContent = copyrightText;
         }
         setCopyright();
 
-        // 打字机动画收尾：移除光标
+        // 打字动画结束后移除光标并允许溢出显示
         const titleEl = document.getElementById('main-title');
         if (titleEl) {
             titleEl.addEventListener('animationend', function(e) {
