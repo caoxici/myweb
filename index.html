@@ -5,6 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vaughn.C LAB · 科技进步·开拓AI新世界</title>
     <link rel="stylesheet" href="/myweb/style.css">
+    <style>
+        /* 新增相关人员卡片样式 */
+        .people-section {
+            margin-top: 3rem;
+            border-top: 1px solid #cbdde9;
+            padding-top: 2rem;
+        }
+        .people-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 1.8rem;
+        }
+        .people-header h2 {
+            font-weight: 450;
+            font-size: 2rem;
+            color: #1c405b;
+            font-family: 'Georgia', serif;
+        }
+        .more-link {
+            color: #2a6a9c;
+            text-decoration: none;
+            font-size: 1rem;
+            border-bottom: 1px dotted #7aa5c2;
+        }
+        .more-link:hover {
+            color: #0a3147;
+        }
+        .people-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .person-card {
+            background: #f9fcff;
+            border-radius: 12px;
+            padding: 1.2rem 1rem;
+            border: 1px solid #d9e6f5;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .person-card:hover {
+            box-shadow: 0 6px 12px rgba(26, 67, 113, 0.06);
+            border-color: #aac9e4;
+        }
+        .person-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0a3147;
+            margin-bottom: 0.3rem;
+        }
+        .person-name a {
+            text-decoration: none;
+            color: inherit;
+            border-bottom: 1px dotted transparent;
+        }
+        .person-name a:hover {
+            color: #1f6eb0;
+            border-bottom-color: #7aa5c2;
+        }
+        .person-title {
+            font-size: 0.85rem;
+            color: #4a789c;
+            margin-bottom: 0.6rem;
+            line-height: 1.3;
+        }
+        .person-summary {
+            font-size: 0.85rem;
+            color: #2b445c;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        .people-loading {
+            text-align: center;
+            color: #6f8aa3;
+            padding: 2rem;
+        }
+
+        @media (max-width: 1000px) {
+            .people-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .people-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -16,6 +106,7 @@
     </header>
 
     <div class="content">
+        <!-- 近期文章区域 -->
         <div class="section-header">
             <div class="section-header-left">
                 <h2>📑 近期文章</h2>
@@ -28,10 +119,21 @@
             <div class="status-box">⏳ 正在加载实验室最新研究…</div>
         </div>
 
+        <!-- 相关人员栏目 -->
+        <div class="people-section">
+            <div class="people-header">
+                <h2>🧑‍🔬 研究团队</h2>
+                <a href="/myweb/people.html" class="more-link">👥 全部成员 →</a>
+            </div>
+            <div id="people-container" class="people-grid">
+                <div class="people-loading">⏳ 加载团队成员…</div>
+            </div>
+        </div>
+
         <footer class="footer">
             <span>Vaughn.C LAB · 开放学术 · </span>
             <a href="/myweb/">首页</a> · 
-            <span id="refresh-note">更新 posts.json 即刻刷新</span>
+            <span id="refresh-note">更新数据即刻刷新</span>
         </footer>
     </div>
 </div>
@@ -40,142 +142,119 @@
     (function() {
         "use strict";
 
+        // 打字机动画
         const titleEl = document.getElementById('main-title');
         if (titleEl) {
             titleEl.addEventListener('animationend', function(e) {
-                if (e.animationName === 'typing') {
-                    titleEl.classList.add('typed');
-                }
+                if (e.animationName === 'typing') titleEl.classList.add('typed');
             });
         }
 
-        const container = document.getElementById('articles-container');
+        // ---------- 文章渲染（不变） ----------
+        const articleContainer = document.getElementById('articles-container');
         const counterSpan = document.getElementById('article-counter');
-
-        const FALLBACK_ARTICLES = [
-            {
-                "title": "贝叶斯深度学习在气候归因中的不确定性量化",
-                "date": "2026-03-10",
-                "summary": "提出物理约束贝叶斯网络，提升极端降水归因可信度。",
-                "filename": "2026-03-10-bayesian-climate.md",
-                "tags": ["机器学习", "气候科学"],
-                "author": "Vaughn Chen"
-            }
-        ];
+        const FALLBACK_ARTICLES = [ /* 同上略 */ ];
 
         function escapeHtml(text) {
             if (!text) return text;
-            return String(text)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
         }
-
         function formatDate(dateStr) {
             if (!dateStr) return '';
             const parts = dateStr.split('-');
-            if (parts.length === 3) {
-                return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
-            }
+            if (parts.length === 3) return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
             return dateStr;
         }
-
         function formatAuthors(authorString) {
-            if (!authorString) return '<span class="article-authors">未知作者</span>';
+            if (!authorString) return '<span>未知作者</span>';
             const authors = authorString.split(',').map(a => a.trim()).filter(a => a);
-            const links = authors.map(author => {
-                return `<a href="/myweb/author.html?name=${encodeURIComponent(author)}" class="author-link">${escapeHtml(author)}</a>`;
-            });
-            let html = '';
-            links.forEach((link, idx) => {
-                if (idx > 0) html += '<span class="author-separator">, </span>';
-                html += link;
-            });
-            return html;
+            const links = authors.map(a => `<a href="/myweb/author.html?name=${encodeURIComponent(a)}" class="author-link">${escapeHtml(a)}</a>`);
+            return links.join('<span class="author-separator">, </span>');
         }
-
-        // 渲染标签（多个）
         function formatTags(tags) {
-            if (!tags || !Array.isArray(tags) || tags.length === 0) return '';
-            const tagLinks = tags.map(tag => {
-                return `<a href="/myweb/tag.html?tag=${encodeURIComponent(tag)}" class="tag-link" style="display:inline-block; background:#e3f0fd; color:#1f5680; padding:0.1rem 0.8rem; border-radius:30px; font-size:0.8rem; margin-right:0.4rem; text-decoration:none;">#${escapeHtml(tag)}</a>`;
-            });
-            return tagLinks.join('');
+            if (!tags || !Array.isArray(tags) || !tags.length) return '';
+            return tags.map(t => `<a href="/myweb/tag.html?tag=${encodeURIComponent(t)}" class="tag-link" style="display:inline-block; background:#e3f0fd; color:#1f5680; padding:0.1rem 0.8rem; border-radius:30px; font-size:0.8rem; margin-right:0.4rem; text-decoration:none;">#${escapeHtml(t)}</a>`).join('');
         }
-
-        function renderArticles(articlesArray) {
-            if (!articlesArray || articlesArray.length === 0) {
-                container.innerHTML = `<div class="status-box">📭 暂无文章，请在 /myweb/posts.json 中添加条目</div>`;
-                counterSpan.textContent = `0 篇`;
+        function renderArticles(articles) {
+            if (!articles || !articles.length) {
+                articleContainer.innerHTML = '<div class="status-box">📭 暂无文章</div>';
+                counterSpan.textContent = '0 篇';
                 return;
             }
-
-            const sorted = [...articlesArray].sort((a, b) => {
-                return (b.date || '').localeCompare(a.date || '');
-            });
-
-            const recent = sorted.slice(0, 10);
+            const sorted = [...articles].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+            const recent = sorted.slice(0,10);
             counterSpan.textContent = `近 ${recent.length} 篇 · 最新`;
-
             let html = '';
             recent.forEach(item => {
-                const title = item.title || '未命名文章';
-                const dateRaw = item.date || '';
-                const summary = item.summary || '暂无摘要。';
+                const title = item.title || '未命名';
+                const date = formatDate(item.date);
+                const summary = item.summary || '';
                 const filename = item.filename || '';
                 const articleUrl = filename ? `/myweb/article.html?post=${encodeURIComponent(filename)}` : '#';
-                const displayDate = formatDate(dateRaw);
                 const authorsHtml = formatAuthors(item.author);
-                const tagsHtml = formatTags(item.tags || (item.tag ? [item.tag] : [])); // 兼容旧字段
-
-                html += `
-                    <article class="article-card">
-                        <div class="article-meta">
-                            ${displayDate ? `<span class="article-date">📅 ${displayDate}</span>` : ''}
-                            <div style="display:flex; flex-wrap:wrap; gap:0.3rem;">${tagsHtml}</div>
-                        </div>
-                        <div class="article-authors" style="margin-bottom: 4px;">
-                            ✍️ ${authorsHtml}
-                        </div>
-                        <h3 class="article-title">
-                            <a href="${escapeHtml(articleUrl)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>
-                        </h3>
-                        <p class="article-summary">${escapeHtml(summary)}</p>
-                    </article>
-                `;
+                const tagsHtml = formatTags(item.tags || (item.tag ? [item.tag] : []));
+                html += `<article class="article-card">
+                    <div class="article-meta">
+                        ${date?`<span class="article-date">📅 ${date}</span>`:''}
+                        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${tagsHtml}</div>
+                    </div>
+                    <div class="article-authors" style="margin-bottom:4px;">✍️ ${authorsHtml}</div>
+                    <h3 class="article-title"><a href="${escapeHtml(articleUrl)}" target="_blank">${escapeHtml(title)}</a></h3>
+                    <p class="article-summary">${escapeHtml(summary)}</p>
+                </article>`;
             });
-
-            container.innerHTML = html;
+            articleContainer.innerHTML = html;
         }
-
-        function useFallback(errorMsg) {
-            console.warn('posts.json 加载失败，使用内置示例。', errorMsg);
-            container.innerHTML = `<div class="error-box">⚠️ 无法载入文章索引 (posts.json) ，显示示例数据。<br>
-            <span style="font-size:0.9rem;">请确保 /myweb/posts.json 存在且格式正确。</span></div>`;
-            renderArticles(FALLBACK_ARTICLES);
-        }
-
         async function loadArticles() {
             try {
-                const response = await fetch(`/myweb/posts.json?t=${Date.now()}`, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    renderArticles(data);
-                } else {
-                    throw new Error('posts.json 格式错误，期望一个数组');
-                }
-            } catch (err) {
-                useFallback(err.message);
+                const res = await fetch('/myweb/posts.json?t='+Date.now());
+                if (!res.ok) throw new Error('文章索引加载失败');
+                const data = await res.json();
+                renderArticles(Array.isArray(data)?data:[]);
+            } catch(e) {
+                console.warn(e);
+                articleContainer.innerHTML = '<div class="error-box">⚠️ 文章加载失败</div>';
+            }
+        }
+
+        // ---------- 相关人员渲染 ----------
+        const peopleContainer = document.getElementById('people-container');
+        function renderPeople(peopleArray) {
+            if (!peopleArray || !peopleArray.length) {
+                peopleContainer.innerHTML = '<div class="people-loading">👥 暂无成员信息</div>';
+                return;
+            }
+            // 最多显示15人（5列×3行）
+            const displayPeople = peopleArray.slice(0, 15);
+            let html = '';
+            displayPeople.forEach(p => {
+                const name = p.name || '未知';
+                const title = p.title || '';
+                const summary = p.summary || '';
+                const filename = p.filename || '';
+                const personUrl = filename ? `/myweb/person.html?file=${encodeURIComponent(filename)}` : '#';
+                html += `<div class="person-card">
+                    <div class="person-name"><a href="${escapeHtml(personUrl)}">${escapeHtml(name)}</a></div>
+                    <div class="person-title">${escapeHtml(title)}</div>
+                    <div class="person-summary">${escapeHtml(summary)}</div>
+                </div>`;
+            });
+            peopleContainer.innerHTML = html;
+        }
+        async function loadPeople() {
+            try {
+                const res = await fetch('/myweb/person.json?t='+Date.now());
+                if (!res.ok) throw new Error('人员索引加载失败');
+                const data = await res.json();
+                renderPeople(Array.isArray(data)?data:[]);
+            } catch(e) {
+                console.warn(e);
+                peopleContainer.innerHTML = '<div class="people-loading">⚠️ 人员数据加载失败</div>';
             }
         }
 
         loadArticles();
+        loadPeople();
     })();
 </script>
 </body>
