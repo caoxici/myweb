@@ -6,19 +6,19 @@
     <title>Vaughn.C LAB · 科技进步·开拓AI新世界</title>
     <link rel="stylesheet" href="/myweb/style.css">
     <style>
-        /* 新增相关人员卡片样式 */
-        .people-section {
-            margin-top: 3rem;
-            border-top: 1px solid #cbdde9;
-            padding-top: 2rem;
+        /* 开发团队卡片样式 */
+        .team-section {
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid #cbdde9;
+            padding-bottom: 2rem;
         }
-        .people-header {
+        .team-header {
             display: flex;
             align-items: baseline;
             justify-content: space-between;
             margin-bottom: 1.8rem;
         }
-        .people-header h2 {
+        .team-header h2 {
             font-weight: 450;
             font-size: 2rem;
             color: #1c405b;
@@ -33,7 +33,7 @@
         .more-link:hover {
             color: #0a3147;
         }
-        .people-grid {
+        .team-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 1.5rem;
@@ -78,19 +78,18 @@
             opacity: 0.9;
             line-height: 1.4;
         }
-        .people-loading {
+        .team-loading {
             text-align: center;
             color: #6f8aa3;
             padding: 2rem;
         }
-
         @media (max-width: 1000px) {
-            .people-grid {
+            .team-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
         @media (max-width: 600px) {
-            .people-grid {
+            .team-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
@@ -106,6 +105,17 @@
     </header>
 
     <div class="content">
+        <!-- 开发团队栏目（位于近期文章上方） -->
+        <div class="team-section">
+            <div class="team-header">
+                <h2>🛠️ 开发团队</h2>
+                <a href="/myweb/people.html" class="more-link">👥 全部成员 →</a>
+            </div>
+            <div id="team-container" class="team-grid">
+                <div class="team-loading">⏳ 加载团队成员…</div>
+            </div>
+        </div>
+
         <!-- 近期文章区域 -->
         <div class="section-header">
             <div class="section-header-left">
@@ -117,17 +127,6 @@
 
         <div id="articles-container" class="article-list">
             <div class="status-box">⏳ 正在加载实验室最新研究…</div>
-        </div>
-
-        <!-- 相关人员栏目 -->
-        <div class="people-section">
-            <div class="people-header">
-                <h2>🧑‍🔬 研究团队</h2>
-                <a href="/myweb/people.html" class="more-link">👥 全部成员 →</a>
-            </div>
-            <div id="people-container" class="people-grid">
-                <div class="people-loading">⏳ 加载团队成员…</div>
-            </div>
         </div>
 
         <footer class="footer">
@@ -150,15 +149,60 @@
             });
         }
 
-        // ---------- 文章渲染（不变） ----------
-        const articleContainer = document.getElementById('articles-container');
-        const counterSpan = document.getElementById('article-counter');
-        const FALLBACK_ARTICLES = [ /* 同上略 */ ];
-
+        // ---------- 开发团队渲染 ----------
+        const teamContainer = document.getElementById('team-container');
         function escapeHtml(text) {
             if (!text) return text;
             return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
         }
+        function renderTeam(peopleArray) {
+            if (!peopleArray || !peopleArray.length) {
+                teamContainer.innerHTML = '<div class="team-loading">👥 暂无成员信息</div>';
+                return;
+            }
+            // 最多显示15人（5列×3行）
+            const displayPeople = peopleArray.slice(0, 15);
+            let html = '';
+            displayPeople.forEach(p => {
+                const name = p.name || '未知';
+                const title = p.title || '';
+                const summary = p.summary || '';
+                const filename = p.filename || '';
+                const personUrl = filename ? `/myweb/person.html?file=${encodeURIComponent(filename)}` : '#';
+                html += `<div class="person-card">
+                    <div class="person-name"><a href="${escapeHtml(personUrl)}">${escapeHtml(name)}</a></div>
+                    <div class="person-title">${escapeHtml(title)}</div>
+                    <div class="person-summary">${escapeHtml(summary)}</div>
+                </div>`;
+            });
+            teamContainer.innerHTML = html;
+        }
+        async function loadTeam() {
+            try {
+                const res = await fetch('/myweb/person.json?t='+Date.now());
+                if (!res.ok) throw new Error('人员索引加载失败');
+                const data = await res.json();
+                renderTeam(Array.isArray(data)?data:[]);
+            } catch(e) {
+                console.warn(e);
+                teamContainer.innerHTML = '<div class="team-loading">⚠️ 人员数据加载失败</div>';
+            }
+        }
+
+        // ---------- 文章渲染 ----------
+        const articleContainer = document.getElementById('articles-container');
+        const counterSpan = document.getElementById('article-counter');
+        const FALLBACK_ARTICLES = [
+            {
+                "title": "贝叶斯深度学习在气候归因中的不确定性量化",
+                "date": "2026-03-10",
+                "summary": "提出物理约束贝叶斯网络，提升极端降水归因可信度。",
+                "filename": "2026-03-10-bayesian-climate.md",
+                "tags": ["机器学习", "气候科学"],
+                "author": "Vaughn Chen"
+            }
+        ];
+
         function formatDate(dateStr) {
             if (!dateStr) return '';
             const parts = dateStr.split('-');
@@ -217,44 +261,9 @@
             }
         }
 
-        // ---------- 相关人员渲染 ----------
-        const peopleContainer = document.getElementById('people-container');
-        function renderPeople(peopleArray) {
-            if (!peopleArray || !peopleArray.length) {
-                peopleContainer.innerHTML = '<div class="people-loading">👥 暂无成员信息</div>';
-                return;
-            }
-            // 最多显示15人（5列×3行）
-            const displayPeople = peopleArray.slice(0, 15);
-            let html = '';
-            displayPeople.forEach(p => {
-                const name = p.name || '未知';
-                const title = p.title || '';
-                const summary = p.summary || '';
-                const filename = p.filename || '';
-                const personUrl = filename ? `/myweb/person.html?file=${encodeURIComponent(filename)}` : '#';
-                html += `<div class="person-card">
-                    <div class="person-name"><a href="${escapeHtml(personUrl)}">${escapeHtml(name)}</a></div>
-                    <div class="person-title">${escapeHtml(title)}</div>
-                    <div class="person-summary">${escapeHtml(summary)}</div>
-                </div>`;
-            });
-            peopleContainer.innerHTML = html;
-        }
-        async function loadPeople() {
-            try {
-                const res = await fetch('/myweb/person.json?t='+Date.now());
-                if (!res.ok) throw new Error('人员索引加载失败');
-                const data = await res.json();
-                renderPeople(Array.isArray(data)?data:[]);
-            } catch(e) {
-                console.warn(e);
-                peopleContainer.innerHTML = '<div class="people-loading">⚠️ 人员数据加载失败</div>';
-            }
-        }
-
+        // 启动加载
+        loadTeam();
         loadArticles();
-        loadPeople();
     })();
 </script>
 </body>
