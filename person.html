@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成员介绍 · Vaughn.C LAB</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#eef3f9; font-family:'宋体','SimSun',serif; color:#1a2e3f; line-height:1.7; padding:2rem 1.5rem; display:flex; flex-direction:column; align-items:center; }
+        .container { width:100%; max-width:1000px; margin:0 auto; background:#fff; border-radius:24px; box-shadow:0 12px 30px rgba(0,20,50,0.08); overflow:hidden; border:1px solid #d9e6f5; }
+        .hero { background:linear-gradient(145deg,#0b1e2e 0%,#1c3c5e 70%,#234e77 100%); padding:2.5rem 3rem; color:#fff; border-bottom:1px solid #2e577a; }
+        .hero h1 { font-size:2.8rem; font-weight:600; font-family:'宋体',serif; margin-bottom:0.3rem; }
+        .hero .subtitle { font-size:1.4rem; color:#d3e6ff; margin-bottom:0.5rem; }
+        .hero .update-date { font-size:0.95rem; color:#b0cde0; }
+        .content { padding:2.5rem 3rem; }
+        .back-link { display:inline-block; margin-bottom:1.5rem; color:#2a6a9c; text-decoration:none; border-bottom:1px dotted #7aa5c2; }
+        .section { margin-bottom:2.5rem; }
+        .section h2 { font-size:1.8rem; color:#1c405b; border-bottom:1px solid #cbdde9; padding-bottom:0.3rem; margin-bottom:1.2rem; font-family:'宋体',serif; }
+        .timeline { list-style:none; padding-left:0; }
+        .timeline li { position:relative; padding-left:2rem; margin-bottom:1rem; border-left:2px solid #9bbfda; }
+        .timeline li::before { content:"●"; position:absolute; left:-0.55rem; top:0.2rem; color:#1f6eb0; font-size:1rem; }
+        .author-link { display:inline-block; margin-top:0.5rem; background:#e3f0fd; color:#1f5680; padding:0.3rem 1.2rem; border-radius:30px; text-decoration:none; }
+        .author-link:hover { background:#cde1f2; }
+        .loading { text-align:center; padding:3rem; color:#436684; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="hero" id="person-hero">
+        <h1 id="person-name">加载中…</h1>
+        <div class="subtitle" id="person-title"></div>
+        <div class="update-date" id="person-date"></div>
+    </header>
+    <div class="content">
+        <a href="/myweb/" class="back-link">← 返回首页</a>
+        <div id="person-content">
+            <div class="loading">⏳ 加载中…</div>
+        </div>
+    </div>
+</div>
+<script>
+    (function(){
+        const params = new URLSearchParams(window.location.search);
+        const file = params.get('file');
+        if(!file) { document.getElementById('person-name').textContent='错误'; document.getElementById('person-content').innerHTML='<p>未指定人员文件</p>'; return; }
+
+        const fileUrl = `/myweb/person/${file}`;
+
+        function escapeHtml(t){ return t?String(t).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])):t; }
+
+        // 解析 .md 内容
+        function parsePersonMarkdown(md) {
+            const lines = md.split('\n');
+            let name = lines[0]?.trim() || '';
+            let title = lines[1]?.trim() || '';
+            let date = lines[2]?.trim() || '';
+            
+            // 提取正文（从第4行开始，跳过空行）
+            let contentStart = 3;
+            while(contentStart < lines.length && lines[contentStart].trim()==='') contentStart++;
+            const body = lines.slice(contentStart).join('\n');
+
+            // 解析各区块
+            const sections = { intro:'', timeline:[], note:'', author:'' };
+            const sectionRegex = /^##\s+(.+)$/gm;
+            let lastIndex = 0;
+            let match;
+            let currentSection = '';
+            const tempBody = body;
+            
+            // 简单按 ## 分割
+            const parts = tempBody.split(/^##\s+/m);
+            for(let i=1; i<parts.length; i++) {
+                const part = parts[i];
+                const firstLineBreak = part.indexOf('\n');
+                const heading = part.substring(0, firstLineBreak).trim();
+                const content = part.substring(firstLineBreak+1).trim();
+                if(heading.includes('人物介绍')) sections.intro = content;
+                else if(heading.includes('任职履历')) {
+                    sections.timeline = content.split('\n').filter(l => l.trim().startsWith('-')).map(l => l.replace(/^-\s*/, '').trim());
+                }
+                else if(heading.includes('个人说明')) sections.note = content;
+                else if(heading.includes('作者主页')) sections.author = content.trim();
+            }
+            return { name, title, date, sections };
+        }
+
+        function render(data) {
+            document.getElementById('person-name').textContent = data.name;
+            document.getElementById('person-title').textContent = data.title;
+            document.getElementById('person-date').textContent = `📅 更新于 ${data.date}`;
+            document.title = `${data.name} · Vaughn.C LAB`;
+
+            const s = data.sections;
+            let html = '';
+            if(s.intro) html += `<section class="section"><h2>📖 人物介绍</h2><p>${escapeHtml(s.intro).replace(/\n/g,'<br>')}</p></section>`;
+            if(s.timeline.length) {
+                html += `<section class="section"><h2>⏳ 任职履历</h2><ul class="timeline">`;
+                s.timeline.forEach(item => html += `<li>${escapeHtml(item)}</li>`);
+                html += `</ul></section>`;
+            }
+            if(s.note) html += `<section class="section"><h2>📝 个人说明</h2><p>${escapeHtml(s.note).replace(/\n/g,'<br>')}</p></section>`;
+            if(s.author) {
+                html += `<section class="section"><h2>🔗 作者主页</h2>
+                    <a href="/myweb/author.html?name=${encodeURIComponent(s.author)}" class="author-link">查看 ${escapeHtml(s.author)} 的全部文章 →</a>
+                </section>`;
+            }
+            document.getElementById('person-content').innerHTML = html || '<p>暂无详细介绍。</p>';
+        }
+
+        async function load() {
+            try {
+                const res = await fetch(fileUrl);
+                if(!res.ok) throw new Error('文件加载失败');
+                const md = await res.text();
+                const data = parsePersonMarkdown(md);
+                render(data);
+            } catch(e) {
+                document.getElementById('person-name').textContent = '加载失败';
+                document.getElementById('person-content').innerHTML = `<p>⚠️ ${e.message}</p>`;
+            }
+        }
+        load();
+    })();
+</script>
+</body>
+</html>
