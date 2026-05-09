@@ -7,9 +7,74 @@
     <link rel="icon" type="image/jpeg" href="/website.jpg">
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* ===== 文章页专属优化 ===== */
+        .article-content pre {
+            position: relative;
+            background: #f4f8fc;
+            border-left: 4px solid #4a7aa9;
+            padding: 1.2rem 1rem 1rem 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .article-content code {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background: transparent;
+            padding: 0;
+            color: #1a2e3f;
+        }
+        .article-content pre code {
+            background: none;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: #dce8f5;
+            border: none;
+            color: #2a5570;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .copy-btn:hover {
+            background: #b8d0e7;
+            color: #0a3147;
+        }
+        .article-content img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+        /* 适配目录滚动 */
+        .toc-sidebar {
+            scrollbar-width: thin;
+            scrollbar-color: #b3cee5 #f8fbfe;
+        }
+        .toc-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .toc-sidebar::-webkit-scrollbar-thumb {
+            background: #b3cee5;
+            border-radius: 3px;
+        }
+        /* 响应式微调 */
+        @media (max-width: 900px) {
+            .article-content pre {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="article-wrapper">
+    <!-- 标题区 -->
     <header class="article-hero" id="article-hero">
         <a href="/digital-watermark.html" class="watermark-link">暗水印工具（专业版）</a>
         <h1 id="article-title">加载中…</h1>
@@ -19,95 +84,215 @@
             <div class="publish-date" id="article-date"></div>
         </div>
     </header>
+
     <div class="article-body-container">
+        <!-- 左侧悬浮目录 -->
         <nav class="toc-sidebar" id="toc-container">
             <div class="toc-title">📑 目录</div>
-            <ul class="toc-list" id="toc-list"><li>加载中…</li></ul>
+            <ul class="toc-list" id="toc-list">
+                <li>加载中…</li>
+            </ul>
         </nav>
-        <main class="article-content" id="article-body"><div class="status-box">⏳ 正在加载文章…</div></main>
+
+        <!-- 正文渲染区 -->
+        <main class="article-content" id="article-body">
+            <div class="status-box">⏳ 正在加载文章…</div>
+        </main>
     </div>
-    <div style="padding:0 3rem 2rem;"><a href="/" class="back-link">← 返回首页</a></div>
+
+    <div style="padding: 0 3rem 2rem;">
+        <a href="/" class="back-link">← 返回首页</a>
+    </div>
 </div>
+
 <script>
-    (function(){
+    (function() {
+        "use strict";
+
+        // 获取 URL 参数
         const params = new URLSearchParams(window.location.search);
         const postFile = params.get('post');
-        if(!postFile){ document.getElementById('article-title').textContent='错误'; document.getElementById('article-body').innerHTML='<p>未指定文章</p>'; return; }
-        const postUrl = `/post/${postFile}`;
-        function esc(t){ return String(t).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
-        function fmtAuthors(a){ if(!a) return ''; return a.split(',').map(s=>`<a href="/author.html?name=${encodeURIComponent(s.trim())}" class="author-link">${esc(s.trim())}</a>`).join('<span style="margin:0 4px;color:#8aa0b5;">, </span>'); }
-        function parseMarkdownMeta(md){
-            const lines = md.split('\n');
-            let title='', subtitle='', authors='', date='';
-            if(lines.length>0) title=lines[0].trim();
-            if(lines.length>1) subtitle=lines[1].trim();
-            if(lines.length>2) authors=lines[2].trim();
-            if(lines.length>3) date=lines[3].trim();
-            let start=4; while(start<lines.length && lines[start].trim()==='') start++;
-            const content = lines.slice(start).join('\n');
-            return {title,subtitle,authors,date,content};
+        if (!postFile) {
+            document.getElementById('article-title').textContent = '错误';
+            document.getElementById('article-body').innerHTML = '<p>未指定文章</p>';
+            return;
         }
-        function generateTOC(html){
-            const div = document.createElement('div'); div.innerHTML=html;
-            const headings = div.querySelectorAll('h3,h4,h5,h6');
+        const postUrl = `/post/${postFile}`;
+
+        // 工具函数
+        function escapeHtml(text) {
+            return String(text).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+            }[m]));
+        }
+
+        // 格式化作者链接
+        function formatAuthors(authorString) {
+            if (!authorString) return '';
+            const authors = authorString.split(',').map(a => a.trim()).filter(a => a);
+            const links = authors.map(author => {
+                return `<a href="/author.html?name=${encodeURIComponent(author)}" class="author-link">${escapeHtml(author)}</a>`;
+            });
+            return links.join('<span style="margin:0 4px;color:#8aa0b5;">, </span>');
+        }
+
+        // 解析 Markdown 元数据（前四行）
+        function parseMarkdownMeta(md) {
+            const lines = md.split('\n');
+            let title = '', subtitle = '', authors = '', date = '';
+            if (lines.length > 0) title = lines[0].trim();
+            if (lines.length > 1) subtitle = lines[1].trim();
+            if (lines.length > 2) authors = lines[2].trim();
+            if (lines.length > 3) date = lines[3].trim();
+            // 跳过前四行后的空行
+            let contentStart = 4;
+            while (contentStart < lines.length && lines[contentStart].trim() === '') {
+                contentStart++;
+            }
+            const content = lines.slice(contentStart).join('\n');
+            return { title, subtitle, authors, date, content };
+        }
+
+        // 生成目录并给标题添加 id
+        function generateTOC(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            const headings = div.querySelectorAll('h3, h4, h5, h6, h7');
             const items = [];
-            headings.forEach((h,i)=>{
+            headings.forEach((h, i) => {
                 const level = h.tagName.toLowerCase();
                 const text = h.textContent.trim();
-                const id = `section-${i}-${text.replace(/\s+/g,'-').slice(0,20)}`;
+                const id = `section-${i}-${text.replace(/\s+/g, '-').substring(0, 20)}`;
                 h.id = id;
-                items.push({level,text,id});
+                items.push({ level, text, id });
             });
-            return {items, html:div.innerHTML};
+            return { items, html: div.innerHTML };
         }
-        function renderTOC(items){
+
+        // 渲染目录
+        function renderTOC(items) {
             const ul = document.getElementById('toc-list');
-            if(!items.length){ ul.innerHTML='<li style="color:#6f8aa3;">无目录</li>'; return; }
-            ul.innerHTML = items.map(i=>`<li class="toc-item"><a class="toc-link toc-level-${i.level.toUpperCase()}" href="#${i.id}">${esc(i.text)}</a></li>`).join('');
-            document.querySelectorAll('.toc-link').forEach(link=>{
-                link.addEventListener('click',e=>{
+            if (!items.length) {
+                ul.innerHTML = '<li style="color:#6f8aa3;">无目录</li>';
+                return;
+            }
+            ul.innerHTML = items.map(i => {
+                let indentClass = 'toc-level-H3';
+                if (i.level === 'h4') indentClass = 'toc-level-H4';
+                else if (i.level === 'h5') indentClass = 'toc-level-H5';
+                else if (i.level === 'h6' || i.level === 'h7') indentClass = 'toc-level-H6';
+                return `<li class="toc-item"><a class="toc-link ${indentClass}" href="#${i.id}">${escapeHtml(i.text)}</a></li>`;
+            }).join('');
+
+            // 点击目录平滑跳转
+            document.querySelectorAll('.toc-link').forEach(link => {
+                link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const el = document.getElementById(link.getAttribute('href').substring(1));
-                    if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 });
             });
         }
-        function setupObserver(){
-            const headings = document.querySelectorAll('h3,h4,h5,h6');
-            if(!headings.length) return;
-            const obs = new IntersectionObserver(entries=>{
-                entries.forEach(e=>{
-                    const link = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
-                    if(link) link.classList.toggle('active', e.isIntersecting);
+
+        // 目录高亮（Intersection Observer）
+        function setupObserver() {
+            const headings = document.querySelectorAll('h3, h4, h5, h6, h7');
+            if (!headings.length) return;
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const link = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+                    if (link) {
+                        link.classList.toggle('active', entry.isIntersecting);
+                    }
                 });
-            },{rootMargin:'-20px 0px -80% 0px'});
-            headings.forEach(h=>obs.observe(h));
+            }, { rootMargin: '-20px 0px -80% 0px' });
+            headings.forEach(h => observer.observe(h));
         }
-        async function load(){
-            const titleEl=document.getElementById('article-title'), subtitleEl=document.getElementById('article-subtitle');
-            const authorsEl=document.getElementById('article-authors'), dateEl=document.getElementById('article-date'), bodyEl=document.getElementById('article-body');
-            try{
-                const res = await fetch(postUrl);
-                if(!res.ok) throw new Error(`文章加载失败 (${res.status})`);
-                const md = await res.text();
-                const {title,subtitle,authors,date,content} = parseMarkdownMeta(md);
+
+        // 为所有代码块添加复制按钮
+        function addCopyButtons() {
+            const pres = document.querySelectorAll('.article-content pre');
+            pres.forEach(pre => {
+                // 避免重复添加
+                if (pre.querySelector('.copy-btn')) return;
+                const btn = document.createElement('button');
+                btn.className = 'copy-btn';
+                btn.textContent = '复制';
+                btn.addEventListener('click', () => {
+                    const code = pre.querySelector('code') || pre;
+                    const text = code.innerText;
+                    navigator.clipboard.writeText(text).then(() => {
+                        btn.textContent = '已复制';
+                        setTimeout(() => { btn.textContent = '复制'; }, 2000);
+                    }).catch(() => {
+                        // 降级方案
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        btn.textContent = '已复制';
+                        setTimeout(() => { btn.textContent = '复制'; }, 2000);
+                    });
+                });
+                pre.style.position = 'relative';
+                pre.appendChild(btn);
+            });
+        }
+
+        // 主加载函数
+        async function loadArticle() {
+            const titleEl = document.getElementById('article-title');
+            const subtitleEl = document.getElementById('article-subtitle');
+            const authorsEl = document.getElementById('article-authors');
+            const dateEl = document.getElementById('article-date');
+            const bodyEl = document.getElementById('article-body');
+
+            try {
+                const response = await fetch(postUrl);
+                if (!response.ok) throw new Error(`文章加载失败 (${response.status})`);
+                const mdText = await response.text();
+
+                // 解析元数据与正文
+                const { title, subtitle, authors, date, content } = parseMarkdownMeta(mdText);
                 document.title = `${title} · Vaughn.C LAB`;
-                titleEl.textContent = title||'无标题';
-                subtitleEl.textContent = subtitle||'';
-                authorsEl.innerHTML = authors?`✍️ ${fmtAuthors(authors)}`:'';
-                dateEl.textContent = date?`📅 ${date}`:'';
+                titleEl.textContent = title || '未命名文章';
+                subtitleEl.textContent = subtitle || '';
+                authorsEl.innerHTML = authors ? `✍️ ${formatAuthors(authors)}` : '';
+                dateEl.textContent = date ? `📅 ${date}` : '';
+
+                // 正文 Markdown -> HTML
                 let bodyHtml = marked.parse(content);
-                const {items,html} = generateTOC(bodyHtml);
+
+                // 生成目录并注入 id
+                const { items, html } = generateTOC(bodyHtml);
                 bodyEl.innerHTML = html;
+
+                // 渲染目录
                 renderTOC(items);
+
+                // 添加代码复制按钮
+                addCopyButtons();
+
+                // 启动目录高亮
                 setupObserver();
-                if(!content.trim()) bodyEl.innerHTML='<p style="color:#6f8aa3;">本文暂无正文内容。</p>';
-            }catch(e){
-                titleEl.textContent='加载失败';
-                bodyEl.innerHTML=`<p>⚠️ ${e.message}</p>`;
+
+                // 处理空正文
+                if (!content.trim()) {
+                    bodyEl.innerHTML = '<p style="color:#6f8aa3;">本文暂无正文内容。</p>';
+                }
+            } catch (error) {
+                console.error(error);
+                titleEl.textContent = '加载失败';
+                bodyEl.innerHTML = `<p>⚠️ ${escapeHtml(error.message)}</p>`;
             }
         }
-        load();
+
+        loadArticle();
     })();
 </script>
 </body>
