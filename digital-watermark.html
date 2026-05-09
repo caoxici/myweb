@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暗水印工具 v3 - 专业版</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.container{max-width:1100px;margin:0 auto;padding:20px}
+h1{font-size:26px;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
+.subtitle{color:#94a3b8;margin-bottom:20px;font-size:13px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:#1e293b;border-radius:12px;padding:4px}
+.tab{flex:1;padding:10px 20px;border:none;background:transparent;color:#94a3b8;cursor:pointer;border-radius:10px;font-size:14px;font-weight:500;transition:.2s}
+.tab.active{background:#3b82f6;color:#fff}
+.panel{display:none}.panel.active{display:block}
+.card{background:#1e293b;border-radius:12px;padding:20px;margin-bottom:14px;border:1px solid #334155}
+.card-title{font-size:15px;font-weight:600;margin-bottom:14px;color:#f1f5f9}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;margin-bottom:4px;font-size:12px;color:#94a3b8;font-weight:500}
+.form-group input[type="text"],.form-group input[type="file"],.form-group select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px}
+.form-group select{cursor:pointer}
+.form-group input[type="range"]{width:100%;accent-color:#3b82f6}
+.form-group input[type="file"]::file-selector-button{padding:5px 12px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;cursor:pointer}
+.btn{padding:8px 20px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary{background:#3b82f6;color:#fff}.btn-primary:hover{background:#2563eb}
+.btn-success{background:#22c55e;color:#fff}.btn-success:hover{background:#16a34a}
+.preview-area{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.preview-box{flex:1;min-width:200px;background:#0f172a;border-radius:8px;border:1px solid #334155;padding:10px;text-align:center}
+.preview-box img{max-width:100%;max-height:250px;border-radius:4px}
+.preview-box label{display:block;font-size:11px;color:#64748b;margin-bottom:6px}
+.result-box{margin-top:12px;padding:14px;border-radius:8px;font-size:13px}
+.result-box.success{background:rgba(34,197,94,.1);border:1px solid #22c55e;color:#86efac}
+.result-box.error{background:rgba(239,68,68,.1);border:1px solid #ef4444;color:#fca5a5}
+.result-box.info{background:rgba(59,130,246,.1);border:1px solid #3b82f6;color:#93c5fd}
+.result-label{font-weight:600;margin-bottom:4px}
+.result-detail{color:#94a3b8;line-height:1.5;word-break:break-all}
+.result-detail strong{color:#e2e8f0}
+.tech-note{font-size:11px;color:#64748b;margin-top:4px;font-style:italic}
+.high-conf{background:rgba(34,197,94,.12)!important;border:2px solid #22c55e!important;border-radius:8px;padding:12px!important}
+.high-conf .wm-text{font-size:16px;font-weight:700;color:#4ade80;margin:4px 0}
+.badge-high{display:inline-block;background:#22c55e;color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-right:6px}
+#detect-progress{display:none}#detect-progress.active{display:block}
+.progress-bar{width:100%;height:5px;background:#334155;border-radius:3px;margin:6px 0;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#a78bfa);border-radius:3px;transition:width .3s}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🔍 暗水印工具 v3</h1>
+<div class="subtitle">LSB顺序嵌入 · 100%精度 · 支持PNG/WebP无损<br><span style="font-size:11px;color:#64748b;margin-top:2px;display:block">©2026 Vaughn XI. All rights reserved.</span></div>
+<div class="tabs">
+<button class="tab active" onclick="switchTab('embed')">嵌入水印</button>
+<button class="tab" onclick="switchTab('detect')">检测水印</button>
+</div>
+
+<!-- 嵌入面板 -->
+<div id="panel-embed" class="panel active">
+<div class="card">
+<div class="card-title">📤 1. 上传原始图片</div>
+<div class="form-group"><input type="file" id="input-image" accept="image/png,image/jpeg,image/webp"></div>
+<div class="preview-area" id="embed-preview" style="display:none">
+<div class="preview-box"><label>原图</label><img id="preview-original"></div>
+<div class="preview-box"><label>嵌入后（肉眼无差异）</label><img id="preview-watermarked"></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">⚙️ 2. 水印参数</div>
+<div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+<div style="flex:2;min-width:220px">
+<label style="display:block;margin-bottom:4px;font-size:12px;color:#94a3b8;font-weight:500">水印文本</label>
+<input type="text" id="watermark-text" value="小龙科技 ©2026" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px">
+</div>
+<div style="flex:1;min-width:120px">
+<label style="display:block;margin-bottom:4px;font-size:12px;color:#94a3b8;font-weight:500">位平面 <span id="bp-val" style="color:#3b82f6;font-weight:600">1</span></label>
+<input type="range" id="embed-bp" min="0" max="3" value="1" step="1" oninput="document.getElementById('bp-val').textContent=this.value">
+<div class="tech-note">0=最隐蔽 · 3=最稳固</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">🚀 3. 嵌入</div>
+<button class="btn btn-primary" onclick="embed()">嵌入暗水印</button>
+<button class="btn btn-success" id="btn-download" style="display:none;margin-left:6px" onclick="downloadWm()">📥 下载带水印 PNG</button>
+<div id="embed-result"></div>
+<div class="tech-note" style="margin-top:8px">💡 请导出为PNG或WebP（无损格式），JPEG有损压缩会破坏水印</div>
+</div>
+</div>
+
+<!-- 检测面板 -->
+<div id="panel-detect" class="panel">
+<div class="card">
+<div class="card-title">📤 1. 上传图片</div>
+<div class="form-group"><input type="file" id="detect-image" accept="image/*"></div>
+<div class="preview-area" id="detect-preview" style="display:none">
+<div class="preview-box"><label>待检测</label><img id="preview-detect"></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">🔎 2. 检测参数</div>
+<div class="row" style="display:flex;gap:12px;flex-wrap:wrap">
+<div style="flex:1;min-width:150px">
+<label style="display:block;margin-bottom:4px;font-size:12px;color:#94a3b8;font-weight:500">模式</label>
+<select id="detect-mode" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:13px">
+<option value="auto">🔍 自动扫描（所有位平面）</option>
+<option value="bp0">位平面 0</option>
+<option value="bp1">位平面 1</option>
+<option value="bp2">位平面 2</option>
+<option value="bp3">位平面 3</option>
+</select>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">🚀 3. 检测</div>
+<button class="btn btn-primary" onclick="detect()">开始检测</button>
+<div id="detect-progress">
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+<div style="font-size:12px;color:#64748b" id="progress-text">检测中...</div>
+</div>
+<div id="detect-result"></div>
+</div>
+</div>
+</div>
+
+<div style="text-align:center;padding:16px 0;font-size:12px;color:#475569;border-top:1px solid #1e293b;margin-top:20px">
+© 2026 <strong style="color:#64748b">Vaughn XI</strong>. All rights reserved. 暗水印工具 · Digital Watermark Tool
+</div>
+
+<script>
+// ========== 工具函数 ==========
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function switchTab(n){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  document.querySelector('.tab[onclick*="'+n+'"]').classList.add('active');
+}
+function loadImage(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=e.target.result};r.readAsDataURL(f)})}
+function $(id){return document.getElementById(id)}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// ========== 文本 <-> 比特流 ==========
+function textToBits(text){
+  const bytes=new TextEncoder().encode(text);
+  const bits=[];
+  // 32位大端长度前缀
+  for(let i=31;i>=0;i--)bits.push((bytes.length>>i)&1);
+  // 数据位（MSB first）
+  for(const b of bytes)for(let i=7;i>=0;i--)bits.push((b>>i)&1);
+  return bits;
+}
+
+function bitsToText(bits,offset=0){
+  if(bits.length<offset+32)return'';
+  let len=0;
+  for(let i=0;i<32;i++)len=(len<<1)|(bits[offset+i]&1);
+  if(len<=0||len>10000)return'';
+  const total=len*8;
+  if(bits.length<offset+32+total)return'';
+  const bytes=[];
+  for(let i=0;i<len;i++){
+    let b=0;
+    for(let j=0;j<8;j++)b=(b<<1)|(bits[offset+32+i*8+j]&1);
+    bytes.push(b);
+  }
+  try{return new TextDecoder().decode(new Uint8Array(bytes))}catch(e){return''}
+}
+
+// 验证文本是否为有效内容（非乱码）
+function isValidText(text){
+  if(!text||text.length<2)return false;
+  let score=0;
+  for(const c of text){
+    const cp=c.charCodeAt(0);
+    if(cp>=32&&cp<=126)score++;
+    else if(cp>127)score+=2;
+    else if(cp===10||cp===13)score++;
+  }
+  return (score/text.length)>0.3;
+}
+
+// ========== 嵌入 ==========
+let wmCanvas=null,wmFileName='';
+
+async function embed(){
+  const fi=$('input-image');
+  const text=$('watermark-text').value.trim();
+  const bp=parseInt($('embed-bp').value);
+  
+  if(!fi.files||!fi.files[0]){showEmbed('请先上传图片','error');return}
+  if(!text){showEmbed('请输入水印文本','error');return}
+  
+  // 转换为比特流
+  const bits=textToBits(text);
+  const mask=1<<bp;
+  
+  // 加载图片
+  const img=await loadImage(fi.files[0]);
+  const c=document.createElement('canvas');
+  c.width=img.width;c.height=img.height;
+  const ctx=c.getContext('2d');
+  ctx.drawImage(img,0,0);
+  
+  const id=ctx.getImageData(0,0,c.width,c.height);
+  const pix=id.data;
+  const totalPix=c.width*c.height;
+  const totalCh=totalPix*4; // RGBA
+  
+  // 检查容量
+  const maxBits=totalPix*3; // RGB通道，保留Alpha
+  if(bits.length>maxBits){
+    showEmbed(`图片最多容纳 ${maxBits} 位，水印需要 ${bits.length} 位。请缩短文本或使用更大图片。`,'error');
+    return;
+  }
+  
+  // === 顺序嵌入 RGB 通道 ===
+  for(let i=0;i<bits.length;i++){
+    // 通道: i%3 -> (R=0, G=1, B=2)
+    const ch=i%3;
+    // 像素索引: i//3
+    const pi=Math.floor(i/3);
+    // 实际data数组索引
+    const idx=pi*4+ch;
+    if(idx<pix.length){
+      if(bits[i]){pix[idx]=pix[idx]|mask;}
+      else{pix[idx]=pix[idx]&(~mask&0xFF);}
+    }
+  }
+  
+  // 显示预览
+  ctx.putImageData(id,0,0);
+  wmCanvas=c;
+  
+  $('embed-preview').style.display='flex';
+  $('preview-original').src=URL.createObjectURL(fi.files[0]);
+  $('preview-watermarked').src=c.toDataURL('image/png');
+  $('btn-download').style.display='inline-block';
+  wmFileName=fi.files[0].name.replace(/\.[^/.]+$/,'')+'_wm.png';
+  
+  showEmbed(`✅ 水印嵌入成功！\n文本: "${text}" (${bits.length}位)\n位平面: ${bp}\n请点击下方按钮下载 PNG 导出图`,'success');
+}
+
+function downloadWm(){
+  if(!wmCanvas)return;
+  const a=document.createElement('a');
+  a.download=wmFileName;
+  a.href=wmCanvas.toDataURL('image/png');
+  a.click();
+  showEmbed('📥 已下载为PNG格式','info');
+}
+
+function showEmbed(msg,type){
+  $('embed-result').innerHTML='<div class="result-box '+type+'"><div class="result-detail">'+esc(msg).replace(/\n/g,'<br>')+'</div></div>';
+}
+
+// ========== 检测 ==========
+async function detect(){
+  const fi=$('detect-image');
+  const mode=$('detect-mode').value;
+  
+  if(!fi.files||!fi.files[0]){showDetect('请先上传图片','error');return}
+  
+  const prog=$('detect-progress');prog.classList.add('active');
+  const fill=$('progress-fill');fill.style.width='0%';
+  $('progress-text').textContent='加载图片...';
+  
+  const img=await loadImage(fi.files[0]);
+  $('detect-preview').style.display='flex';
+  $('preview-detect').src=URL.createObjectURL(fi.files[0]);
+  
+  fill.style.width='15%';$('progress-text').textContent='读取像素数据...';await sleep(30);
+  
+  const c=document.createElement('canvas');
+  c.width=img.width;c.height=img.height;
+  const ctx=c.getContext('2d');
+  ctx.drawImage(img,0,0);
+  const id=ctx.getImageData(0,0,c.width,c.height);
+  const pix=id.data;
+  const totalPix=c.width*c.height;
+  
+  fill.style.width='30%';$('progress-text').textContent='扫描位平面...';await sleep(30);
+  
+  let allFound=[];
+  
+  // 确定要扫描哪些位平面
+  let scanBPs;
+  if(mode==='auto')scanBPs=[0,1,2,3];
+  else scanBPs=[parseInt(mode.replace('bp',''))];
+  
+  fill.style.width='40%';
+  for(let bi=0;bi<scanBPs.length;bi++){
+    const bp=scanBPs[bi];
+    fill.style.width=(40+bi*15)+'%';
+    $('progress-text').textContent=`扫描位平面 ${bp} (${bi+1}/${scanBPs.length})...`;
+    await sleep(20);
+    
+    const mask=1<<bp;
+    
+    // 提取RGB通道的全部位（顺序）
+    const maxRead=Math.min(totalPix*3,50000); // 最多读5万位
+    const bits=[];
+    for(let i=0;i<maxRead;i++){
+      const ch=i%3;
+      const pi=Math.floor(i/3);
+      const idx=pi*4+ch;
+      if(idx<pix.length)bits.push((pix[idx]&mask)?1:0);
+    }
+    
+    // 从offsets 0, 8, 16, 24, 32尝试解码（检查位对齐）
+    for(let off=0;off<40;off+=8){
+      const text=bitsToText(bits,off);
+      if(text&&text.length>=2&&isValidText(text)){
+        // 二次验证：重新编码看是否匹配
+        const reBits=textToBits(text);
+        let match=0;
+        for(let j=0;j<reBits.length&&j<bits.length;j++){
+          if(reBits[j]===bits[j])match++;
+        }
+        const rate=match/Math.min(reBits.length,bits.length);
+        if(rate>0.9&&!allFound.some(r=>r.text===text)){
+          allFound.push({text,method:`LSB BP${bp} offset=${off}`,confidence:Math.round(rate*100)});
+        }
+      }
+    }
+    
+    // 也尝试直接按字节解码（无长度前缀）
+    if(allFound.length===0){
+      for(let checkLen=2;checkLen<Math.min(50,Math.floor(bits.length/8));checkLen++){
+        const bytes=[];
+        for(let i=0;i<checkLen;i++){
+          let b=0;
+          for(let j=0;j<8;j++)b=(b<<1)|(bits[i*8+j]&1);
+          bytes.push(b);
+        }
+        try{
+          const text=new TextDecoder().decode(new Uint8Array(bytes));
+          if(isValidText(text)&&text.length>=2){
+            if(!allFound.some(r=>r.text===text)){
+              allFound.push({text,method:`LSB BP${bp} 直接`,confidence:70});
+            }
+          }
+        }catch{}
+      }
+    }
+  }
+  
+  fill.style.width='90%';$('progress-text').textContent='生成报告...';await sleep(30);
+  
+  // 输出结果 - 按可信度降序排列
+  let html='';
+  if(allFound.length>0){
+    // 去重 + 按可信度降序排序
+    const unique=allFound.filter((r,i)=>i===allFound.findIndex(x=>x.text===r.text));
+    unique.sort((a,b)=>b.confidence-a.confidence);
+    
+    html='<div class="result-box success">';
+    html+='<div class="result-label">🔎 检测到暗水印！共 '+unique.length+' 项结果</div>';
+    html+='<div class="result-detail">';
+    for(const r of unique){
+      const isHigh=r.confidence>=90;
+      const bg=isHigh?'rgba(34,197,94,.15)':'rgba(59,130,246,.08)';
+      const border=isHigh?'2px solid #22c55e':'1px solid transparent';
+      const color=isHigh?'#86efac':'inherit';
+      html+=`<div style="margin:8px 0;padding:12px;background:${bg};border-radius:8px;border:${border}">`;
+      if(isHigh){
+        html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="background:#22c55e;color:#000;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">高置信度</span><span style="font-size:12px;color:#64748b">${r.method}</span></div>`;
+        html+=`<div style="font-size:16px;font-weight:700;color:#4ade80">${esc(r.text)}</div>`;
+      } else {
+        html+=`<strong>水印内容：</strong>"${esc(r.text)}"<br>`;
+        html+=`<strong>检测方式：</strong>${r.method}<br>`;
+      }
+      html+=`<div style="margin-top:4px;font-size:12px;color:#64748b">可信度：${r.confidence}%</div>`;
+      html+='</div>';
+    }
+    html+='</div></div>';
+  } else {
+    html='<div class="result-box error">';
+    html+='<div class="result-label">❌ 未检测到暗水印</div>';
+    html+='<div class="result-detail">';
+    html+='可能原因：<br>1. 此图片不包含暗水印<br>2. 水印使用了不同的位平面<br>3. 图片经过JPEG有损压缩导致LSB丢失<br>';
+    html+='<br>💡 建议：请确认您检测的图片是使用本工具的PNG/WebP导出格式。';
+    html+='</div></div>';
+  }
+  
+  $('detect-result').innerHTML=html;
+  fill.style.width='100%';$('progress-text').textContent='完成';
+}
+
+function showDetect(msg,type){
+  $('detect-result').innerHTML='<div class="result-box '+type+'"><div class="result-detail">'+esc(msg)+'</div></div>';
+}
+
+// 文件输入重置
+$('input-image').addEventListener('change',function(){
+  if(this.files&&this.files[0]){$('embed-preview').style.display='none';$('btn-download').style.display='none';$('embed-result').innerHTML=''}
+});
+$('detect-image').addEventListener('change',function(){
+  if(this.files&&this.files[0]){$('detect-preview').style.display='none';$('detect-result').innerHTML=''}
+});
+</script>
+</body>
+</html>
