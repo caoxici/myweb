@@ -5,48 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章 · Vaughn.C LAB</title>
     <link rel="icon" type="image/jpeg" href="/website.jpg">
+    <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#eef3f9; font-family:'宋体','SimSun','Times New Roman',serif; color:#1a2e3f; line-height:1.7; padding:2rem 1.5rem; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
-        .article-wrapper { width:100%; max-width:1400px; margin:0 auto; background:#fff; border-radius:24px; box-shadow:0 12px 30px rgba(0,20,50,0.08); overflow:hidden; border:1px solid #d9e6f5; display:flex; flex-direction:column; }
-        .article-hero { background:linear-gradient(145deg,#0b1e2e,#1c3c5e,#234e77); padding:2.5rem 3rem 2rem; color:#fff; border-bottom:1px solid #2e577a; position:relative; }
-        .article-hero::after { content:""; position:absolute; bottom:0; left:3rem; right:3rem; height:2px; background:linear-gradient(90deg,#6da5d3,#aac9e4,transparent); opacity:0.5; }
-        .article-hero h1 { font-size:2.8rem; font-weight:600; font-family:'宋体',serif; text-shadow:0 2px 8px rgba(0,0,0,0.3); margin-bottom:0.5rem; }
-        .article-hero h2 { font-size:1.5rem; font-weight:400; color:#d3e6ff; margin-top:0.25rem; border-left:5px solid #6ea8dc; padding-left:1.5rem; }
-        .article-meta-row { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; margin-top:1.2rem; }
-        .authors-line { font-size:1.1rem; color:#c0daf5; }
-        .author-link { color:#b6d9fc; text-decoration:none; font-weight:500; margin-right:4px; border-bottom:1px dotted transparent; }
-        .author-link:hover { color:#fff; border-bottom-color:#8bb9e0; }
-        .publish-date { font-size:1rem; color:#c0daf5; background:rgba(255,255,255,0.08); padding:0.2rem 1.2rem; border-radius:30px; }
-        .article-body-container { display:flex; flex:1; background:#fff; align-items:flex-start; }
-        .toc-sidebar { width:260px; padding:2rem 0 2rem 1.5rem; background:#f8fbfe; border-right:1px solid #d0e0ee; position:sticky; top:20px; align-self:flex-start; max-height:calc(100vh - 40px); overflow-y:auto; font-family:'宋体',serif; flex-shrink:0; }
-        .toc-title { font-size:1.2rem; font-weight:600; color:#1c405b; margin-bottom:1.2rem; padding-bottom:0.5rem; border-bottom:2px solid #b3cee5; }
-        .toc-list { list-style:none; padding-left:0; }
-        .toc-item { margin-bottom:0.4rem; }
-        .toc-link { color:#2a5570; text-decoration:none; font-size:0.95rem; display:block; padding:0.25rem 0.5rem; border-left:3px solid transparent; transition:all 0.1s; }
-        .toc-link:hover { color:#0a3147; background:#e3effa; border-left-color:#1f6eb0; }
-        .toc-link.active { color:#1a5e8c; font-weight:600; border-left-color:#1f6eb0; background:#e3effa; }
-        .toc-level-H3 { padding-left:0.5rem; }
-        .toc-level-H4 { padding-left:1.5rem; font-size:0.9rem; }
-        .toc-level-H5 { padding-left:2.5rem; font-size:0.85rem; }
-        .toc-level-H6 { padding-left:3.5rem; font-size:0.8rem; color:#436684; }
-        .article-content { flex:1; padding:2.5rem 3rem 3rem; max-width:900px; font-family:'宋体',serif; }
-        .article-content h3 { font-size:1.8rem; font-weight:600; margin:2rem 0 1rem; color:#0a3147; border-bottom:1px solid #cbdde9; padding-bottom:0.4rem; }
-        .article-content h4 { font-size:1.5rem; font-weight:550; margin:1.8rem 0 0.8rem; color:#1c405b; }
-        .article-content h5 { font-size:1.3rem; font-weight:550; margin:1.5rem 0 0.6rem; color:#234e6b; }
-        .article-content h6 { font-size:1.15rem; font-weight:550; margin:1.2rem 0 0.5rem; color:#2c5a7a; }
-        .back-link { display:inline-block; margin-top:2rem; color:#2a6a9c; text-decoration:none; border-bottom:1px dotted #7aa5c2; }
-        @media (max-width:900px) {
-            .article-body-container { flex-direction:column; }
-            .toc-sidebar { width:100%; position:static; max-height:none; border-right:none; border-bottom:1px solid #d0e0ee; padding:1.5rem; }
-            .article-content { padding:1.5rem; }
-        }
-    </style>
 </head>
 <body>
 <div class="article-wrapper">
     <header class="article-hero" id="article-hero">
+        <a href="/digital-watermark.html" class="watermark-link">暗水印工具（专业版）</a>
         <h1 id="article-title">加载中…</h1>
         <h2 id="article-subtitle"></h2>
         <div class="article-meta-row">
@@ -59,7 +24,7 @@
             <div class="toc-title">📑 目录</div>
             <ul class="toc-list" id="toc-list"><li>加载中…</li></ul>
         </nav>
-        <main class="article-content" id="article-body"><div class="loading">⏳ 正在加载文章…</div></main>
+        <main class="article-content" id="article-body"><div class="status-box">⏳ 正在加载文章…</div></main>
     </div>
     <div style="padding:0 3rem 2rem;"><a href="/" class="back-link">← 返回首页</a></div>
 </div>
