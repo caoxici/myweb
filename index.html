@@ -186,6 +186,24 @@
             color: #7a99b3;
             font-family: 'Segoe UI', 'Roboto', sans-serif;
         }
+        .watermark-link {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            color: #d3e6ff;
+            border: 1px solid rgba(255,255,255,0.35);
+            padding: 0.3rem 1.1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .watermark-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: rgba(255,255,255,0.6);
+        }
         @media (max-width: 700px) {
             .hero {
                 padding: 2rem 1.5rem 1.5rem;
@@ -207,12 +225,19 @@
                 margin-top: 0.8rem;
                 font-size: 1.2rem;
             }
+            .watermark-link {
+                top: 0.8rem;
+                right: 1rem;
+                font-size: 0.8rem;
+                padding: 0.2rem 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <header class="hero">
+        <a href="/digital-watermark.html" class="watermark-link">暗水印工具（专业版）</a>
         <div class="typewriter">
             <h1 id="main-title">
                 <span class="brand-cursive">Vaughn.C</span> 
