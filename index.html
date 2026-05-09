@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vaughn.C LAB · 科技进步·开拓AI新世界</title>
-    <!-- 引入连笔字体 & 基础样式 -->
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/myweb/style.css">
+    <link rel="stylesheet" href="/style.css">
     <style>
-        /* 开发团队卡片样式 */
         .team-section {
             margin-bottom: 2.5rem;
             border-bottom: 1px solid #cbdde9;
@@ -96,14 +94,13 @@
             }
         }
 
-        /* 标题区优化 —— 动态渐变+连笔立体 */
         .hero {
             background: linear-gradient(145deg, #0b1e2e 0%, #1c3c5e 70%, #234e77 100%);
             padding: 2.8rem 3rem 2.2rem 3rem;
             color: white;
             border-bottom: 1px solid #2e577a;
             position: relative;
-            overflow: visible;      /* 防止裁剪花体下降部分 */
+            overflow: visible;
         }
         .hero::after {
             content: "";
@@ -115,12 +112,9 @@
             background: linear-gradient(90deg, #6da5d3, #aac9e4, transparent);
             opacity: 0.5;
         }
-
-        /* 打字机容器 */
         .typewriter {
             display: inline-block;
         }
-
         .typewriter h1 {
             font-size: 4.2rem;
             font-weight: 500;
@@ -138,16 +132,12 @@
             overflow: hidden;
             width: fit-content;
             max-width: 100%;
-            line-height: 1.6;           /* 增大行高，确保花体完整显示 */
+            line-height: 1.6;
         }
-
-        /* 动画结束后移除光标，并强制溢出可见 */
         .typewriter h1.typed {
             border-right: none;
             overflow: visible !important;
         }
-
-        /* 连笔品牌名 */
         .brand-cursive {
             font-family: 'Pacifico', cursive;
             font-size: 1.15em;
@@ -156,8 +146,6 @@
             display: inline-block;
             margin-right: 0.2em;
         }
-
-        /* LAB 部分缩小，突出 Vaughn.C */
         .brand-lab {
             font-family: 'Georgia', 'Times New Roman', serif;
             font-size: 0.55em;
@@ -166,36 +154,29 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
             display: inline-block;
         }
-
-        /* 副标题 —— 增加与主标题的间距 */
         .subhead {
             font-size: 1.5rem;
             font-weight: 300;
             color: #d3e6ff;
-            margin-top: 1.2rem;         /* 拉大垂直距离 */
+            margin-top: 1.2rem;
             border-left: 5px solid #6ea8dc;
             padding-left: 1.5rem;
             text-shadow: 0 1px 3px rgba(0,0,0,0.2);
             letter-spacing: 1px;
         }
-
         @keyframes gradientFlow {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
         @keyframes typing {
             from { width: 0; }
             to { width: 100%; }
         }
-
         @keyframes blink-caret {
             from, to { border-color: transparent; }
             50% { border-color: rgba(255,255,255,0.7); }
         }
-
-        /* 版权信息样式 */
         .copyright {
             text-align: center;
             margin-top: 1.5rem;
@@ -205,8 +186,6 @@
             color: #7a99b3;
             font-family: 'Segoe UI', 'Roboto', sans-serif;
         }
-
-        /* 响应式调整 */
         @media (max-width: 700px) {
             .hero {
                 padding: 2rem 1.5rem 1.5rem;
@@ -242,179 +221,94 @@
         </div>
         <div class="subhead">科技进步·开拓AI新世界！</div>
     </header>
-
     <div class="content">
-        <!-- 开发团队栏目 -->
         <div class="team-section">
             <div class="team-header">
                 <h2>🛠️ 开发团队</h2>
-                <a href="/myweb/people.html" class="more-link">👥 全部成员 →</a>
+                <a href="/people.html" class="more-link">👥 全部成员 →</a>
             </div>
             <div id="team-container" class="team-grid">
                 <div class="team-loading">⏳ 加载团队成员…</div>
             </div>
         </div>
-
-        <!-- 近期文章区域 -->
         <div class="section-header">
             <div class="section-header-left">
                 <h2>📑 近期文章</h2>
-                <a href="/myweb/archive.html" class="all-posts-link">📂 全部文章 →</a>
+                <a href="/archive.html" class="all-posts-link">📂 全部文章 →</a>
             </div>
             <span class="badge" id="article-counter">加载中…</span>
         </div>
-
         <div id="articles-container" class="article-list">
             <div class="status-box">⏳ 正在加载实验室最新研究…</div>
         </div>
-
         <footer class="footer">
             <span>Vaughn.C LAB · 开放学术 · </span>
-            <a href="/myweb/">首页</a> · 
+            <a href="/">首页</a> · 
             <span id="refresh-note">更新数据即刻刷新</span>
             <div id="copyright-notice" class="copyright"></div>
         </footer>
     </div>
 </div>
-
 <script>
     (function() {
-        "use strict";
-
-        // 动态版权年份
         function setCopyright() {
             const currentYear = new Date().getFullYear();
             const startYear = 2026;
-            let copyrightText = '';
-            if (currentYear <= startYear) {
-                copyrightText = `© ${startYear} Vaughn.C LAB. All Rights Reserved.`;
-            } else {
-                copyrightText = `© ${startYear}–${currentYear} Vaughn.C LAB. All Rights Reserved.`;
-            }
-            const copyrightEl = document.getElementById('copyright-notice');
-            if (copyrightEl) copyrightEl.textContent = copyrightText;
+            let text = currentYear <= startYear ? `© ${startYear} Vaughn.C LAB. All Rights Reserved.` : `© ${startYear}–${currentYear} Vaughn.C LAB. All Rights Reserved.`;
+            document.getElementById('copyright-notice').textContent = text;
         }
         setCopyright();
-
-        // 打字动画结束后移除光标并允许溢出显示
         const titleEl = document.getElementById('main-title');
-        if (titleEl) {
-            titleEl.addEventListener('animationend', function(e) {
-                if (e.animationName === 'typing') {
-                    titleEl.classList.add('typed');
-                }
-            });
-        }
+        if (titleEl) titleEl.addEventListener('animationend', e => { if (e.animationName === 'typing') titleEl.classList.add('typed'); });
 
-        // ---------- 开发团队渲染 ----------
         const teamContainer = document.getElementById('team-container');
         function escapeHtml(text) {
-            if (!text) return text;
             return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
         }
-        function renderTeam(peopleArray) {
-            if (!peopleArray || !peopleArray.length) {
-                teamContainer.innerHTML = '<div class="team-loading">👥 暂无成员信息</div>';
-                return;
-            }
-            const displayPeople = peopleArray.slice(0, 15);
+        function renderTeam(arr) {
+            if (!arr.length) { teamContainer.innerHTML='<div class="team-loading">👥 暂无成员信息</div>'; return; }
             let html = '';
-            displayPeople.forEach(p => {
-                const name = p.name || '未知';
-                const title = p.title || '';
-                const summary = p.summary || '';
-                const filename = p.filename || '';
-                const personUrl = filename ? `/myweb/person.html?file=${encodeURIComponent(filename)}` : '#';
-                html += `<div class="person-card">
-                    <div class="person-name"><a href="${escapeHtml(personUrl)}">${escapeHtml(name)}</a></div>
-                    <div class="person-title">${escapeHtml(title)}</div>
-                    <div class="person-summary">${escapeHtml(summary)}</div>
-                </div>`;
+            arr.slice(0,15).forEach(p => {
+                const name = p.name||'未知', title = p.title||'', summary = p.summary||'', filename = p.filename||'';
+                const url = filename ? `/person.html?file=${encodeURIComponent(filename)}` : '#';
+                html += `<div class="person-card"><div class="person-name"><a href="${escapeHtml(url)}">${escapeHtml(name)}</a></div><div class="person-title">${escapeHtml(title)}</div><div class="person-summary">${escapeHtml(summary)}</div></div>`;
             });
             teamContainer.innerHTML = html;
         }
         async function loadTeam() {
-            try {
-                const res = await fetch('/myweb/person.json?t='+Date.now());
-                if (!res.ok) throw new Error('人员索引加载失败');
-                const data = await res.json();
-                renderTeam(Array.isArray(data)?data:[]);
-            } catch(e) {
-                console.warn(e);
-                teamContainer.innerHTML = '<div class="team-loading">⚠️ 人员数据加载失败</div>';
-            }
+            try { const r = await fetch('/person.json?t='+Date.now()); const d = await r.json(); renderTeam(Array.isArray(d)?d:[]); }
+            catch(e) { teamContainer.innerHTML='<div class="team-loading">⚠️ 人员数据加载失败</div>'; }
         }
 
-        // ---------- 文章渲染 ----------
         const articleContainer = document.getElementById('articles-container');
         const counterSpan = document.getElementById('article-counter');
-        const FALLBACK_ARTICLES = [
-            {
-                "title": "贝叶斯深度学习在气候归因中的不确定性量化",
-                "date": "2026-03-10",
-                "summary": "提出物理约束贝叶斯网络，提升极端降水归因可信度。",
-                "filename": "2026-03-10-bayesian-climate.md",
-                "tags": ["机器学习", "气候科学"],
-                "author": "Vaughn Chen"
-            }
-        ];
-
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
-            return dateStr;
+        function formatDate(d) { if(!d) return ''; const p=d.split('-'); return p.length===3?`${p[0]}年${+p[1]}月${+p[2]}日`:d; }
+        function formatAuthors(a) {
+            if(!a) return '<span>未知作者</span>';
+            return a.split(',').map(s=>`<a href="/author.html?name=${encodeURIComponent(s.trim())}" class="author-link">${escapeHtml(s.trim())}</a>`).join('<span class="author-separator">, </span>');
         }
-        function formatAuthors(authorString) {
-            if (!authorString) return '<span>未知作者</span>';
-            const authors = authorString.split(',').map(a => a.trim()).filter(a => a);
-            const links = authors.map(a => `<a href="/myweb/author.html?name=${encodeURIComponent(a)}" class="author-link">${escapeHtml(a)}</a>`);
-            return links.join('<span class="author-separator">, </span>');
+        function formatTags(t) {
+            if(!t||!Array.isArray(t)||!t.length) return '';
+            return t.map(tag=>`<a href="/tag.html?tag=${encodeURIComponent(tag)}" style="display:inline-block;background:#e3f0fd;color:#1f5680;padding:0.1rem 0.8rem;border-radius:30px;font-size:0.8rem;margin-right:0.4rem;text-decoration:none;">#${escapeHtml(tag)}</a>`).join('');
         }
-        function formatTags(tags) {
-            if (!tags || !Array.isArray(tags) || !tags.length) return '';
-            return tags.map(t => `<a href="/myweb/tag.html?tag=${encodeURIComponent(t)}" class="tag-link" style="display:inline-block; background:#e3f0fd; color:#1f5680; padding:0.1rem 0.8rem; border-radius:30px; font-size:0.8rem; margin-right:0.4rem; text-decoration:none;">#${escapeHtml(t)}</a>`).join('');
-        }
-        function renderArticles(articles) {
-            if (!articles || !articles.length) {
-                articleContainer.innerHTML = '<div class="status-box">📭 暂无文章</div>';
-                counterSpan.textContent = '0 篇';
-                return;
-            }
-            const sorted = [...articles].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+        function renderArticles(arr) {
+            if(!arr.length) { articleContainer.innerHTML='<div class="status-box">📭 暂无文章</div>'; counterSpan.textContent='0 篇'; return; }
+            const sorted = [...arr].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
             const recent = sorted.slice(0,10);
             counterSpan.textContent = `近 ${recent.length} 篇 · 最新`;
             let html = '';
             recent.forEach(item => {
-                const title = item.title || '未命名';
-                const date = formatDate(item.date);
-                const summary = item.summary || '';
-                const filename = item.filename || '';
-                const articleUrl = filename ? `/myweb/article.html?post=${encodeURIComponent(filename)}` : '#';
+                const title = item.title||'未命名', date = formatDate(item.date), summary = item.summary||'', filename = item.filename||'';
+                const articleUrl = filename ? `/article.html?post=${encodeURIComponent(filename)}` : '#';
                 const authorsHtml = formatAuthors(item.author);
-                const tagsHtml = formatTags(item.tags || (item.tag ? [item.tag] : []));
-                html += `<article class="article-card">
-                    <div class="article-meta">
-                        ${date?`<span class="article-date">📅 ${date}</span>`:''}
-                        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${tagsHtml}</div>
-                    </div>
-                    <div class="article-authors" style="margin-bottom:4px;">✍️ ${authorsHtml}</div>
-                    <h3 class="article-title"><a href="${escapeHtml(articleUrl)}" target="_blank">${escapeHtml(title)}</a></h3>
-                    <p class="article-summary">${escapeHtml(summary)}</p>
-                </article>`;
+                const tagsHtml = formatTags(item.tags||(item.tag?[item.tag]:[]));
+                html += `<article class="article-card"><div class="article-meta">${date?`<span class="article-date">📅 ${date}</span>`:''}<div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${tagsHtml}</div></div><div class="article-authors" style="margin-bottom:4px;">✍️ ${authorsHtml}</div><h3 class="article-title"><a href="${escapeHtml(articleUrl)}" target="_blank">${escapeHtml(title)}</a></h3><p class="article-summary">${escapeHtml(summary)}</p></article>`;
             });
             articleContainer.innerHTML = html;
         }
         async function loadArticles() {
-            try {
-                const res = await fetch('/myweb/posts.json?t='+Date.now());
-                if (!res.ok) throw new Error('文章索引加载失败');
-                const data = await res.json();
-                renderArticles(Array.isArray(data)?data:[]);
-            } catch(e) {
-                console.warn(e);
-                articleContainer.innerHTML = '<div class="error-box">⚠️ 文章加载失败</div>';
-            }
+            try { const r = await fetch('/posts.json?t='+Date.now()); const d = await r.json(); renderArticles(Array.isArray(d)?d:[]); }
+            catch(e) { articleContainer.innerHTML='<div class="error-box">⚠️ 文章加载失败</div>'; }
         }
 
         loadTeam();
