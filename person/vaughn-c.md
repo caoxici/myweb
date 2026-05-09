@@ -1,6 +1,6 @@
 Vaughn C
 研究员 · 金融工程
-2026/4/21
+2026/5/9
 
 ## 人物介绍
 Vaughn C，Vaughn.C LAB 创始人。主要从事agent与金融的相关研究，当前研究重点为 OpenClaw 框架及其在金融智能中的应用探索。
@@ -16,4 +16,4 @@ Vaughn C，Vaughn.C LAB 创始人。主要从事agent与金融的相关研究，
 Vaughn C
 
 ## 联系方式
-- 邮箱：cx@viso.eu.org
+邮箱：cx@viso.eu.org
