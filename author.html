@@ -7,108 +7,62 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:#eef3f9; font-family:'Segoe UI','Roboto',sans-serif; color:#1a2e3f; line-height:1.6; padding:2rem 1.2rem; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
-        .container { width:100%; max-width:1300px; margin:0 auto; background:#ffffff; border-radius:24px; box-shadow:0 12px 30px rgba(0,20,50,0.08); overflow:hidden; border:1px solid #d9e6f5; flex:1; }
-        .hero { background:linear-gradient(145deg, #0b1e2e 0%, #1c3c5e 70%, #234e77 100%); padding:2.5rem 3rem; color:white; border-bottom:1px solid #2e577a; }
+        .container { width:100%; max-width:1300px; margin:0 auto; background:#fff; border-radius:24px; box-shadow:0 12px 30px rgba(0,20,50,0.08); overflow:hidden; border:1px solid #d9e6f5; flex:1; }
+        .hero { background:linear-gradient(145deg,#0b1e2e,#1c3c5e,#234e77); padding:2.5rem 3rem; color:#fff; border-bottom:1px solid #2e577a; }
         .hero h1 { font-size:2.8rem; font-weight:500; font-family:'Georgia',serif; }
         .hero .subhead { font-size:1.2rem; color:#d3e6ff; margin-top:0.5rem; }
         .content { padding:2.5rem 2.8rem; }
-        .back-link { display:inline-block; margin-bottom:2rem; color:#2a6a9c; text-decoration:none; font-size:1rem; border-bottom:1px dotted #7aa5c2; }
-        .back-link:hover { color:#0a3147; }
+        .back-link { display:inline-block; margin-bottom:2rem; color:#2a6a9c; text-decoration:none; border-bottom:1px dotted #7aa5c2; }
         .article-list { display:flex; flex-direction:column; gap:1.2rem; }
-        .article-card { padding:1.2rem 1.8rem; background:#ffffff; border-left:5px solid #9bbfda; border-radius:0 12px 12px 0; border-bottom:1px solid #e2ecf5; }
-        .article-meta { display:flex; flex-wrap:wrap; gap:0.8rem 1.5rem; margin-bottom:0.5rem; font-size:0.9rem; align-items:center; }
+        .article-card { padding:1.2rem 1.8rem; background:#fff; border-left:5px solid #9bbfda; border-radius:0 12px 12px 0; border-bottom:1px solid #e2ecf5; }
+        .article-meta { display:flex; flex-wrap:wrap; gap:0.8rem 1.5rem; margin-bottom:0.5rem; font-size:0.9rem; }
         .article-date { color:#2b6a9c; font-weight:600; }
         .article-title { font-size:1.3rem; margin:0.3rem 0 0.2rem; }
         .article-title a { color:#0a3147; text-decoration:none; font-family:'Georgia',serif; }
-        .article-title a:hover { color:#1a66b3; }
         .status-box { text-align:center; padding:3rem; color:#436684; }
         .tag-link { display:inline-block; background:#e3f0fd; color:#1f5680; padding:0.1rem 0.8rem; border-radius:30px; font-size:0.8rem; margin-right:0.3rem; text-decoration:none; }
     </style>
 </head>
 <body>
 <div class="container">
-    <header class="hero">
-        <h1 id="author-name-display">作者文章</h1>
-        <div class="subhead">Vaughn.C LAB · 学术档案</div>
-    </header>
+    <header class="hero"><h1 id="author-name-display">作者文章</h1><div class="subhead">Vaughn.C LAB · 学术档案</div></header>
     <div class="content">
-        <a href="/myweb/" class="back-link">← 返回首页</a>
-        <div id="author-container" class="article-list">
-            <div class="status-box">⏳ 加载中…</div>
-        </div>
+        <a href="/" class="back-link">← 返回首页</a>
+        <div id="author-container" class="article-list"><div class="status-box">⏳ 加载中…</div></div>
     </div>
 </div>
 <script>
-    (function() {
-        const container = document.getElementById('author-container');
-        const nameDisplay = document.getElementById('author-name-display');
+    (function(){
+        const cont = document.getElementById('author-container');
+        const nameDisp = document.getElementById('author-name-display');
         const params = new URLSearchParams(window.location.search);
-        const targetAuthor = params.get('name') ? decodeURIComponent(params.get('name')).trim() : '';
-        if (!targetAuthor) {
-            nameDisplay.textContent = '未指定作者';
-            container.innerHTML = '<div class="status-box">请通过作者链接访问</div>';
-            return;
-        }
-        nameDisplay.textContent = `👤 ${targetAuthor} 的文章`;
-
-        function escapeHtml(text) {
-            if (!text) return text;
-            return String(text).replace(/[&<>"']/g, function(m) {
-                return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[m];
-            });
-        }
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
-            return dateStr;
-        }
-        function formatTags(tags) {
-            if (!tags || !Array.isArray(tags) || tags.length===0) return '';
-            return tags.map(t => `<a href="/myweb/tag.html?tag=${encodeURIComponent(t)}" class="tag-link">#${escapeHtml(t)}</a>`).join('');
-        }
-
-        async function loadAuthorArticles() {
-            try {
-                const resp = await fetch('/myweb/posts.json?t=' + Date.now());
-                if (!resp.ok) throw new Error('无法获取文章数据');
-                const data = await resp.json();
-                if (!Array.isArray(data)) throw new Error('数据格式错误');
-                const filtered = data.filter(item => {
-                    if (!item.author) return false;
-                    const authors = item.author.split(',').map(a => a.trim());
-                    return authors.includes(targetAuthor);
+        const target = params.get('name') ? decodeURIComponent(params.get('name')).trim() : '';
+        if(!target){ nameDisp.textContent='未指定作者'; cont.innerHTML='<div class="status-box">请通过作者链接访问</div>'; return; }
+        nameDisp.textContent = `👤 ${target} 的文章`;
+        function esc(t){ return String(t).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+        function fmtDate(d){ if(!d) return ''; const p=d.split('-'); return p.length===3?`${p[0]}年${+p[1]}月${+p[2]}日`:d; }
+        function fmtTags(t){ if(!t||!Array.isArray(t)||!t.length) return ''; return t.map(tag=>`<a href="/tag.html?tag=${encodeURIComponent(tag)}" class="tag-link">#${esc(tag)}</a>`).join(''); }
+        async function load(){
+            try{
+                const r = await fetch('/posts.json?t='+Date.now());
+                const d = await r.json();
+                const filtered = d.filter(item=>{
+                    if(!item.author) return false;
+                    return item.author.split(',').map(a=>a.trim()).includes(target);
                 });
-                const sorted = filtered.sort((a,b) => (b.date||'').localeCompare(a.date||''));
-                if (sorted.length === 0) {
-                    container.innerHTML = `<div class="status-box">📭 ${targetAuthor} 暂无文章</div>`;
-                    return;
-                }
-                let html = '';
-                sorted.forEach(item => {
-                    const title = item.title || '无标题';
-                    const date = formatDate(item.date);
-                    const filename = item.filename || '';
-                    const articleUrl = filename ? `/myweb/article.html?post=${encodeURIComponent(filename)}` : '#';
-                    const tagsHtml = formatTags(item.tags || (item.tag ? [item.tag] : []));
-
-                    html += `
-                        <article class="article-card">
-                            <div class="article-meta">
-                                <span class="article-date">📅 ${date}</span>
-                                <div>${tagsHtml}</div>
-                            </div>
-                            <h3 class="article-title"><a href="${escapeHtml(articleUrl)}" target="_blank">${escapeHtml(title)}</a></h3>
-                        </article>
-                    `;
+                const sorted = filtered.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+                if(!sorted.length){ cont.innerHTML=`<div class="status-box">📭 ${target} 暂无文章</div>`; return; }
+                let html='';
+                sorted.forEach(item=>{
+                    const title=item.title||'无标题', date=fmtDate(item.date), filename=item.filename||'';
+                    const url = filename ? `/article.html?post=${encodeURIComponent(filename)}` : '#';
+                    const tagsHtml=fmtTags(item.tags||(item.tag?[item.tag]:[]));
+                    html+=`<article class="article-card"><div class="article-meta"><span class="article-date">📅 ${date}</span><div>${tagsHtml}</div></div><h3 class="article-title"><a href="${esc(url)}" target="_blank">${esc(title)}</a></h3></article>`;
                 });
-                container.innerHTML = html;
-            } catch(e) {
-                container.innerHTML = '<div class="status-box">⚠️ 加载失败，请稍后重试</div>';
-                console.error(e);
-            }
+                cont.innerHTML=html;
+            }catch(e){ cont.innerHTML='<div class="status-box">⚠️ 加载失败</div>'; }
         }
-        loadAuthorArticles();
+        load();
     })();
 </script>
 </body>
