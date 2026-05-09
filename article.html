@@ -8,7 +8,18 @@
     <link rel="stylesheet" href="/style.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        /* ===== 文章页专属优化 ===== */
+        /* 修复目录栏 sticky 定位 */
+        .article-body-container {
+            overflow: visible;          /* 保证 sticky 不受父容器限制 */
+            align-items: flex-start;
+        }
+        .toc-sidebar {
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+            background: #f8fbfe;        /* 加上背景，避免后面内容穿透 */
+        }
+        /* 代码块复制按钮 */
         .article-content pre {
             position: relative;
             background: #f4f8fc;
@@ -20,14 +31,9 @@
             font-size: 0.95rem;
             line-height: 1.5;
         }
-        .article-content code {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            background: transparent;
-            padding: 0;
-            color: #1a2e3f;
-        }
         .article-content pre code {
             background: none;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
         }
         .copy-btn {
             position: absolute;
@@ -52,11 +58,7 @@
             border-radius: 6px;
             margin: 1rem 0;
         }
-        /* 适配目录滚动 */
-        .toc-sidebar {
-            scrollbar-width: thin;
-            scrollbar-color: #b3cee5 #f8fbfe;
-        }
+        /* 目录滚动条美化 */
         .toc-sidebar::-webkit-scrollbar {
             width: 6px;
         }
@@ -64,17 +66,15 @@
             background: #b3cee5;
             border-radius: 3px;
         }
-        /* 响应式微调 */
         @media (max-width: 900px) {
-            .article-content pre {
-                font-size: 0.85rem;
+            .toc-sidebar {
+                position: static;        /* 移动端恢复普通流 */
             }
         }
     </style>
 </head>
 <body>
 <div class="article-wrapper">
-    <!-- 标题区 -->
     <header class="article-hero" id="article-hero">
         <a href="/digital-watermark.html" class="watermark-link">暗水印工具（专业版）</a>
         <h1 id="article-title">加载中…</h1>
@@ -86,7 +86,7 @@
     </header>
 
     <div class="article-body-container">
-        <!-- 左侧悬浮目录 -->
+        <!-- 左侧目录（现在会跟随滚动了） -->
         <nav class="toc-sidebar" id="toc-container">
             <div class="toc-title">📑 目录</div>
             <ul class="toc-list" id="toc-list">
@@ -94,7 +94,6 @@
             </ul>
         </nav>
 
-        <!-- 正文渲染区 -->
         <main class="article-content" id="article-body">
             <div class="status-box">⏳ 正在加载文章…</div>
         </main>
@@ -107,9 +106,6 @@
 
 <script>
     (function() {
-        "use strict";
-
-        // 获取 URL 参数
         const params = new URLSearchParams(window.location.search);
         const postFile = params.get('post');
         if (!postFile) {
@@ -119,24 +115,18 @@
         }
         const postUrl = `/post/${postFile}`;
 
-        // 工具函数
         function escapeHtml(text) {
             return String(text).replace(/[&<>"']/g, m => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
             }[m]));
         }
-
-        // 格式化作者链接
         function formatAuthors(authorString) {
             if (!authorString) return '';
             const authors = authorString.split(',').map(a => a.trim()).filter(a => a);
-            const links = authors.map(author => {
-                return `<a href="/author.html?name=${encodeURIComponent(author)}" class="author-link">${escapeHtml(author)}</a>`;
-            });
-            return links.join('<span style="margin:0 4px;color:#8aa0b5;">, </span>');
+            return authors.map(a => 
+                `<a href="/author.html?name=${encodeURIComponent(a)}" class="author-link">${escapeHtml(a)}</a>`
+            ).join('<span style="margin:0 4px;color:#8aa0b5;">, </span>');
         }
-
-        // 解析 Markdown 元数据（前四行）
         function parseMarkdownMeta(md) {
             const lines = md.split('\n');
             let title = '', subtitle = '', authors = '', date = '';
@@ -144,16 +134,11 @@
             if (lines.length > 1) subtitle = lines[1].trim();
             if (lines.length > 2) authors = lines[2].trim();
             if (lines.length > 3) date = lines[3].trim();
-            // 跳过前四行后的空行
             let contentStart = 4;
-            while (contentStart < lines.length && lines[contentStart].trim() === '') {
-                contentStart++;
-            }
+            while (contentStart < lines.length && lines[contentStart].trim() === '') contentStart++;
             const content = lines.slice(contentStart).join('\n');
             return { title, subtitle, authors, date, content };
         }
-
-        // 生成目录并给标题添加 id
         function generateTOC(html) {
             const div = document.createElement('div');
             div.innerHTML = html;
@@ -168,8 +153,6 @@
             });
             return { items, html: div.innerHTML };
         }
-
-        // 渲染目录
         function renderTOC(items) {
             const ul = document.getElementById('toc-list');
             if (!items.length) {
@@ -177,46 +160,33 @@
                 return;
             }
             ul.innerHTML = items.map(i => {
-                let indentClass = 'toc-level-H3';
-                if (i.level === 'h4') indentClass = 'toc-level-H4';
-                else if (i.level === 'h5') indentClass = 'toc-level-H5';
-                else if (i.level === 'h6' || i.level === 'h7') indentClass = 'toc-level-H6';
-                return `<li class="toc-item"><a class="toc-link ${indentClass}" href="#${i.id}">${escapeHtml(i.text)}</a></li>`;
+                let cls = 'toc-level-H3';
+                if (i.level === 'h4') cls = 'toc-level-H4';
+                else if (i.level === 'h5') cls = 'toc-level-H5';
+                else if (i.level === 'h6' || i.level === 'h7') cls = 'toc-level-H6';
+                return `<li class="toc-item"><a class="toc-link ${cls}" href="#${i.id}">${escapeHtml(i.text)}</a></li>`;
             }).join('');
-
-            // 点击目录平滑跳转
             document.querySelectorAll('.toc-link').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const targetId = this.getAttribute('href').substring(1);
-                    const targetEl = document.getElementById(targetId);
-                    if (targetEl) {
-                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
+                    const target = document.getElementById(this.getAttribute('href').substring(1));
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             });
         }
-
-        // 目录高亮（Intersection Observer）
         function setupObserver() {
             const headings = document.querySelectorAll('h3, h4, h5, h6, h7');
             if (!headings.length) return;
-            const observer = new IntersectionObserver((entries) => {
+            const observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
                     const link = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
-                    if (link) {
-                        link.classList.toggle('active', entry.isIntersecting);
-                    }
+                    if (link) link.classList.toggle('active', entry.isIntersecting);
                 });
             }, { rootMargin: '-20px 0px -80% 0px' });
             headings.forEach(h => observer.observe(h));
         }
-
-        // 为所有代码块添加复制按钮
         function addCopyButtons() {
-            const pres = document.querySelectorAll('.article-content pre');
-            pres.forEach(pre => {
-                // 避免重复添加
+            document.querySelectorAll('.article-content pre').forEach(pre => {
                 if (pre.querySelector('.copy-btn')) return;
                 const btn = document.createElement('button');
                 btn.className = 'copy-btn';
@@ -226,9 +196,8 @@
                     const text = code.innerText;
                     navigator.clipboard.writeText(text).then(() => {
                         btn.textContent = '已复制';
-                        setTimeout(() => { btn.textContent = '复制'; }, 2000);
+                        setTimeout(() => btn.textContent = '复制', 2000);
                     }).catch(() => {
-                        // 降级方案
                         const textarea = document.createElement('textarea');
                         textarea.value = text;
                         document.body.appendChild(textarea);
@@ -236,62 +205,40 @@
                         document.execCommand('copy');
                         document.body.removeChild(textarea);
                         btn.textContent = '已复制';
-                        setTimeout(() => { btn.textContent = '复制'; }, 2000);
+                        setTimeout(() => btn.textContent = '复制', 2000);
                     });
                 });
                 pre.style.position = 'relative';
                 pre.appendChild(btn);
             });
         }
-
-        // 主加载函数
         async function loadArticle() {
             const titleEl = document.getElementById('article-title');
             const subtitleEl = document.getElementById('article-subtitle');
             const authorsEl = document.getElementById('article-authors');
             const dateEl = document.getElementById('article-date');
             const bodyEl = document.getElementById('article-body');
-
             try {
-                const response = await fetch(postUrl);
-                if (!response.ok) throw new Error(`文章加载失败 (${response.status})`);
-                const mdText = await response.text();
-
-                // 解析元数据与正文
-                const { title, subtitle, authors, date, content } = parseMarkdownMeta(mdText);
+                const resp = await fetch(postUrl);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const md = await resp.text();
+                const { title, subtitle, authors, date, content } = parseMarkdownMeta(md);
                 document.title = `${title} · Vaughn.C LAB`;
-                titleEl.textContent = title || '未命名文章';
+                titleEl.textContent = title || '无标题';
                 subtitleEl.textContent = subtitle || '';
                 authorsEl.innerHTML = authors ? `✍️ ${formatAuthors(authors)}` : '';
                 dateEl.textContent = date ? `📅 ${date}` : '';
-
-                // 正文 Markdown -> HTML
                 let bodyHtml = marked.parse(content);
-
-                // 生成目录并注入 id
                 const { items, html } = generateTOC(bodyHtml);
                 bodyEl.innerHTML = html;
-
-                // 渲染目录
                 renderTOC(items);
-
-                // 添加代码复制按钮
                 addCopyButtons();
-
-                // 启动目录高亮
                 setupObserver();
-
-                // 处理空正文
-                if (!content.trim()) {
-                    bodyEl.innerHTML = '<p style="color:#6f8aa3;">本文暂无正文内容。</p>';
-                }
-            } catch (error) {
-                console.error(error);
+            } catch (e) {
                 titleEl.textContent = '加载失败';
-                bodyEl.innerHTML = `<p>⚠️ ${escapeHtml(error.message)}</p>`;
+                bodyEl.innerHTML = `<p>⚠️ ${escapeHtml(e.message)}</p>`;
             }
         }
-
         loadArticle();
     })();
 </script>
