@@ -5,28 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>作者文章 · Vaughn.C LAB</title>
     <link rel="icon" type="image/jpeg" href="/website.jpg">
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#eef3f9; font-family:'Segoe UI','Roboto',sans-serif; color:#1a2e3f; line-height:1.6; padding:2rem 1.2rem; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
-        .container { width:100%; max-width:1300px; margin:0 auto; background:#fff; border-radius:24px; box-shadow:0 12px 30px rgba(0,20,50,0.08); overflow:hidden; border:1px solid #d9e6f5; flex:1; }
-        .hero { background:linear-gradient(145deg,#0b1e2e,#1c3c5e,#234e77); padding:2.5rem 3rem; color:#fff; border-bottom:1px solid #2e577a; }
-        .hero h1 { font-size:2.8rem; font-weight:500; font-family:'Georgia',serif; }
-        .hero .subhead { font-size:1.2rem; color:#d3e6ff; margin-top:0.5rem; }
-        .content { padding:2.5rem 2.8rem; }
-        .back-link { display:inline-block; margin-bottom:2rem; color:#2a6a9c; text-decoration:none; border-bottom:1px dotted #7aa5c2; }
-        .article-list { display:flex; flex-direction:column; gap:1.2rem; }
-        .article-card { padding:1.2rem 1.8rem; background:#fff; border-left:5px solid #9bbfda; border-radius:0 12px 12px 0; border-bottom:1px solid #e2ecf5; }
-        .article-meta { display:flex; flex-wrap:wrap; gap:0.8rem 1.5rem; margin-bottom:0.5rem; font-size:0.9rem; }
-        .article-date { color:#2b6a9c; font-weight:600; }
-        .article-title { font-size:1.3rem; margin:0.3rem 0 0.2rem; }
-        .article-title a { color:#0a3147; text-decoration:none; font-family:'Georgia',serif; }
-        .status-box { text-align:center; padding:3rem; color:#436684; }
-        .tag-link { display:inline-block; background:#e3f0fd; color:#1f5680; padding:0.1rem 0.8rem; border-radius:30px; font-size:0.8rem; margin-right:0.3rem; text-decoration:none; }
-    </style>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <div class="container">
-    <header class="hero"><h1 id="author-name-display">作者文章</h1><div class="subhead">Vaughn.C LAB · 学术档案</div></header>
+    <header class="hero">
+        <a href="/digital-watermark.html" class="watermark-link">暗水印工具（专业版）</a>
+        <h1 id="author-name-display">作者文章</h1>
+        <div class="subhead">Vaughn.C LAB · 学术档案</div>
+    </header>
     <div class="content">
         <a href="/" class="back-link">← 返回首页</a>
         <div id="author-container" class="article-list"><div class="status-box">⏳ 加载中…</div></div>
@@ -58,7 +45,7 @@
                     const title=item.title||'无标题', date=fmtDate(item.date), filename=item.filename||'';
                     const url = filename ? `/article.html?post=${encodeURIComponent(filename)}` : '#';
                     const tagsHtml=fmtTags(item.tags||(item.tag?[item.tag]:[]));
-                    html+=`<article class="article-card"><div class="article-meta"><span class="article-date">📅 ${date}</span><div>${tagsHtml}</div></div><h3 class="article-title"><a href="${esc(url)}" target="_blank">${esc(title)}</a></h3></article>`;
+                    html+=`<article class="article-card"><div class="article-meta"><span class="article-date">📅 ${date}</span><div style="display:flex;flex-wrap:wrap;gap:0.2rem;">${tagsHtml}</div></div><h3 class="article-title"><a href="${esc(url)}" target="_blank">${esc(title)}</a></h3></article>`;
                 });
                 cont.innerHTML=html;
             }catch(e){ cont.innerHTML='<div class="status-box">⚠️ 加载失败</div>'; }
