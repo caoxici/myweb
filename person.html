@@ -6,6 +6,31 @@
     <title>成员介绍 · Vaughn.C LAB</title>
     <link rel="icon" type="image/jpeg" href="/website.jpg">
     <link rel="stylesheet" href="/style.css">
+    <style>
+        /* 联系方式区块额外样式 */
+        .contact-section {
+            background: #f8fbfe;
+            border-left: 4px solid #6ea8dc;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+        }
+        .contact-section p {
+            margin: 0.4rem 0;
+            font-size: 0.95rem;
+            color: #2b445c;
+            font-family: '宋体', 'SimSun', serif;
+        }
+        .contact-section a {
+            color: #1f6eb0;
+            text-decoration: none;
+            border-bottom: 1px dotted #7aa5c2;
+        }
+        .contact-section a:hover {
+            color: #0a3147;
+            border-bottom-color: #1f6eb0;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -26,7 +51,9 @@
         const file = params.get('file');
         if(!file){ document.getElementById('person-name').textContent='错误'; return; }
         const fileUrl = `/person/${file}`;
+
         function esc(t){ return String(t).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
         function parsePerson(md){
             const lines = md.split('\n');
             let name='', title='', date='';
@@ -35,7 +62,9 @@
             if(lines.length>2) date=lines[2].trim();
             let start=3; while(start<lines.length && lines[start].trim()==='') start++;
             const body = lines.slice(start).join('\n');
-            const sections = {intro:'',timeline:[],note:'',author:''};
+
+            const sections = {intro:'',timeline:[],note:'',author:'',contact:''};
+            // 分割 ## 开头的区块
             const parts = body.split(/^##\s+/m);
             for(let i=1;i<parts.length;i++){
                 const part=parts[i];
@@ -46,18 +75,22 @@
                 else if(heading.includes('任职履历')) sections.timeline=content.split('\n').filter(l=>l.trim().startsWith('-')).map(l=>l.replace(/^-\s*/,'').trim());
                 else if(heading.includes('个人说明')) sections.note=content;
                 else if(heading.includes('作者主页')) sections.author=content.trim();
+                else if(heading.includes('联系方式')) sections.contact=content.trim();
             }
             return {name,title,date,sections};
         }
+
         async function load(){
             try{
                 const r = await fetch(fileUrl);
+                if(!r.ok) throw new Error('文件加载失败');
                 const md = await r.text();
                 const d = parsePerson(md);
                 document.getElementById('person-name').textContent = d.name;
                 document.getElementById('person-title').textContent = d.title;
                 document.getElementById('person-date').textContent = `📅 更新于 ${d.date}`;
                 document.title = `${d.name} · Vaughn.C LAB`;
+
                 let html='';
                 const s = d.sections;
                 if(s.intro) html+=`<section class="section" style="margin-bottom:2.5rem;"><h2 style="font-size:1.8rem; color:#1c405b; border-bottom:1px solid #cbdde9; padding-bottom:0.3rem; margin-bottom:1.2rem;">📖 人物介绍</h2><p>${esc(s.intro).replace(/\n/g,'<br>')}</p></section>`;
@@ -68,8 +101,32 @@
                 }
                 if(s.note) html+=`<section class="section" style="margin-bottom:2.5rem;"><h2 style="font-size:1.8rem; color:#1c405b; border-bottom:1px solid #cbdde9;">📝 个人说明</h2><p>${esc(s.note).replace(/\n/g,'<br>')}</p></section>`;
                 if(s.author) html+=`<section class="section"><h2 style="font-size:1.8rem; color:#1c405b; border-bottom:1px solid #cbdde9;">🔗 作者主页</h2><a href="/author.html?name=${encodeURIComponent(s.author)}" class="tag-link" style="padding:0.3rem 1.2rem;">查看 ${esc(s.author)} 的全部文章 →</a></section>`;
+                // 联系方式区块
+                if(s.contact){
+                    // 将内容按行分割，简单处理换行，链接自动识别（简单处理）
+                    const lines = s.contact.split('\n').filter(l=>l.trim()!=='');
+                    let contactHtml = '';
+                    lines.forEach(line => {
+                        // 将邮箱和电话转换为链接（简单匹配）
+                        let processed = esc(line);
+                        // 邮箱
+                        processed = processed.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, '<a href="mailto:$1">$1</a>');
+                        // 简单手机号/电话（可选）
+                        processed = processed.replace(/(\+?\d{1,4}[-\s]?)?(\(?\d{2,4}\)?[-\s]?)?\d{3,4}[-\s]?\d{3,4}([-\s]?\d{3,4})?/g, (match) => {
+                            if(match.includes('@')) return match; // 避免误伤邮箱
+                            return `<a href="tel:${match.replace(/[^0-9+]/g,'')}">${match}</a>`;
+                        });
+                        contactHtml += `<p>${processed}</p>`;
+                    });
+                    html+=`<section class="section"><h2 style="font-size:1.8rem; color:#1c405b; border-bottom:1px solid #cbdde9; padding-bottom:0.3rem; margin-bottom:1rem;">📞 联系方式</h2>
+                    <div class="contact-section">${contactHtml}</div></section>`;
+                }
+
                 document.getElementById('person-content').innerHTML = html || '<p>暂无详细介绍。</p>';
-            }catch(e){ document.getElementById('person-name').textContent='加载失败'; }
+            }catch(e){
+                document.getElementById('person-name').textContent='加载失败';
+                document.getElementById('person-content').innerHTML = `<p>⚠️ ${e.message}</p>`;
+            }
         }
         load();
     })();
