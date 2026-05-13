@@ -92,12 +92,14 @@ export async function onRequest(context) {
       const bp = parseInt(body.bitplane) || 1;
       const seed = body.seed || '';
 
-      const result = embedWatermark(imgBytes, text, bp, seed);
+      const resultBytes = await embedWatermark(imgBytes, text, bp, seed);
+      // Convert Uint8Array to base64
+      const base64 = btoa(String.fromCharCode(...resultBytes));
       return json({
         success: true,
-        image: result.image,
+        image: base64,
         format: 'png',
-        size_bytes: result.size_bytes,
+        size_bytes: resultBytes.length,
         bitplane: bp,
         has_password: Boolean(seed),
       });
@@ -119,6 +121,7 @@ export async function onRequest(context) {
 
     return json({ success: false, error: '未知路径: ' + path }, 404);
   } catch (e) {
-    return json({ success: false, error: e.message || '服务内部错误' }, 500);
+    console.error('API Error:', e);
+    return json({ success: false, error: e.message || '服务内部错误', stack: e.stack }, 500);
   }
 }
