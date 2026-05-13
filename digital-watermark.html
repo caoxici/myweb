@@ -79,7 +79,7 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:va
 
 <div id="panel-embed" class="pn ac">
 <div class="cd"><div class="ch"><span class="cs">1</span><h3>上传图片</h3></div><div class="fg"><input type="file" id="i1" accept="image/*"></div><div class="ht">支持 PNG/JPEG/WebP</div>
-<div class="pg" id="pb" style="display:none"><div class="pb"><div class="l">原始</div><img id="po"></div><div class="pb" id="pw" style="display:none"><div class="l">带水印</div><img id="pw"></div></div></div>
+<div class="pg" id="pb" style="display:none"><div class="pb"><div class="l">原始</div><img id="po"></div><div class="pb" id="pwc" style="display:none"><div class="l">带水印</div><img id="pw"></div></div></div>
 <div class="cd"><div class="ch"><span class="cs">2</span><h3>参数</h3></div>
 <div class="fg"><label>文本</label><input type="text" id="it" value="暗水印测试专用"></div>
 <div class="fr"><div class="fg"><label>🔑 密码</label><input type="text" id="is" placeholder="可选"></div>
@@ -154,7 +154,7 @@ function fs(b) {
   return b + ' B';
 }
 
-$('i1').onchange = function() { if (this.files && this.files[0]) { sh('pb', false); sh('pw', false); sh('dl', false); $('re').innerHTML = ''; } };
+$('i1').onchange = function() { if (this.files && this.files[0]) { sh('pb', false); sh('pwc', false); sh('dl', false); $('re').innerHTML = ''; } };
 $('i2').onchange = function() { if (this.files && this.files[0]) { sh('dp', false); $('rd').innerHTML = ''; } };
 
 $('be').onclick = async function() {
@@ -174,11 +174,12 @@ $('be').onclick = async function() {
       body: JSON.stringify({ image: b64, text: t, bitplane: bp, seed: sd })
     });
     var d = await r.json();
+    console.log('API Response:', d);
     if (!d.success) { sm('re', '失败: ' + (d.error || ''), 'e'); st('&#10060; 失败'); btn.disabled = false; btn.innerHTML = '&#9889; 嵌入水印'; return; }
     var wu = 'data:image/png;base64,' + d.image;
     sh('pb', true);
     var fr = new FileReader();
-    fr.onload = function(e) { $('po').src = e.target.result; setTimeout(function() { $('pw').src = wu; sh('pw', true); sh('dl', true); }, 100); };
+    fr.onload = function(e) { $('po').src = e.target.result; setTimeout(function() { $('pw').src = wu; sh('pwc', true); sh('dl', true); }, 100); };
     fr.readAsDataURL(f[0]);
     var p = sd ? ' &#183; 密码保护' : '';
     st('&#9989; 已嵌入 &#183; "' + es(t) + '" &#183; 位平面 ' + bp + p);
