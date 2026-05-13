@@ -1,7 +1,7 @@
 /**
  * StegaLoom Pro — Cloudflare Pages Function
  * 
- * 位置: functions/_worker.js
+ * 此位置: functions/_worker.js
  * CF Pages 自动将此文件作为 Worker 函数，处理 /api/* 请求
  */
 
