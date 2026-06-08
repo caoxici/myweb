@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图片暗水印工具</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --card: #1a1a2e;
+    --accent: #6c63ff;
+    --accent2: #e94560;
+    --text: #eee;
+    --muted: #888;
+    --border: #333;
+    --success: #4ade80;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+  .card h3 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+
+  /* Upload area */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--accent);
+    background: rgba(108, 99, 255, 0.05);
+  }
+  .upload-area input { display: none; }
+  .upload-area .icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .upload-area .text { color: var(--muted); }
+  .upload-area .hint { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
+
+  /* Preview */
+  .preview-box {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .preview-item {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+  }
+  .preview-item img, .preview-item canvas {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #000;
+  }
+  .preview-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* Form elements */
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input[type="text"], textarea, select {
+    width: 100%;
+    padding: 10px 14px;
+    background: #0f0f0f;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+  textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+
+  /* Slider */
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .slider-group input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+  .slider-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+  .slider-val {
+    min-width: 36px;
+    text-align: right;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #5a52e0; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-secondary:hover { background: rgba(108, 99, 255, 0.1); }
+  .btn-danger {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .btn-danger:hover { background: #d13a55; }
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* Log */
+  .log {
+    background: #0a0a1a;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.8rem;
+    color: var(--success);
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .log.visible { display: block; }
+
+  /* Comparison */
+  .compare-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .compare-container canvas {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Radio group */
+  .radio-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  .radio-group input[type="radio"] {
+    accent-color: var(--accent);
+  }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .stat-item {
+    background: #0f0f0f;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-item .val { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+  .stat-item .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  /* Extract result */
+  .extract-result {
+    background: #0a0a1a;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    display: none;
+    word-break: break-all;
+  }
+  .extract-result.visible { display: block; }
+
+  @media (max-width: 600px) {
+    .card { padding: 16px; }
+    .upload-area { padding: 24px; }
+    h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🔒 图片暗水印工具</h1>
+  <p class="subtitle">LSB 隐写术 · 纯前端处理 · 数据不离开你的设备</p>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="embed" onclick="switchTab('embed')">✍️ 嵌入水印</button>
+    <button class="tab" data-tab="extract" onclick="switchTab('extract')">🔍 提取水印</button>
+    <button class="tab" data-tab="about" onclick="switchTab('about')">📖 原理说明</button>
+  </div>
+
+  <!-- ===== 嵌入面板 ===== -->
+  <div class="panel active" id="panel-embed">
+    <div class="card">
+      <h3>1. 上传原始图片</h3>
+      <div class="upload-area" id="upload-embed" onclick="document.getElementById('file-embed').click()">
+        <input type="file" id="file-embed" accept="image/*" onchange="onEmbedFile(event)">
+        <div class="icon">📁</div>
+        <div class="text">点击或拖拽图片到这里</div>
+        <div class="hint">支持 JPG / PNG / BMP / WebP</div>
+      </div>
+      <div id="embed-preview" style="display:none">
+        <div class="preview-box">
+          <div class="preview-item">
+            <img id="embed-img-preview">
+            <div class="preview-label">原始图片</div>
+          </div>
+          <div class="preview-item">
+            <canvas id="embed-canvas"></canvas>
+            <div class="preview-label">含水印预览</div>
+          </div>
+        </div>
+        <div class="stats" id="embed-stats"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>2. 水印设置</h3>
+      <div class="form-group">
+        <label>水印类型</label>
+        <div class="radio-group">
+          <label><input type="radio" name="wm-type" value="text" checked onchange="toggleWmType()"> 文本水印</label>
+          <label><input type="radio" name="wm-type" value="binary" onchange="toggleWmType()"> 二进制水印</label>
+        </div>
+      </div>
+
+      <div class="form-group" id="wm-text-group">
+        <label>水印文本</label>
+        <input type="text" id="wm-text" placeholder="例如：© 曹同学 2026" maxlength="256">
+      </div>
+
+      <div class="form-group" id="wm-binary-group" style="display:none">
+        <label>二进制数据（十六进制，如 48656c6c6f）</label>
+        <input type="text" id="wm-binary" placeholder="例如：48656c6c6f">
+      </div>
+
+      <div class="form-group">
+        <label>嵌入强度</label>
+        <div class="slider-group">
+          <input type="range" id="wm-strength" min="1" max="3" value="1" step="1" oninput="updateStrengthLabel()">
+          <span class="slider-val" id="strength-label">1 bit</span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">
+          强度越大水印越鲁棒，但图片质量越低。推荐 1 bit（肉眼不可见）。
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>输出格式</label>
+        <select id="output-format">
+          <option value="png">PNG（无损，推荐）</option>
+          <option value="jpeg">JPEG（有损，水印可能丢失）</option>
+          <option value="webp">WebP</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>3. 执行</h3>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btn-embed" onclick="doEmbed()" disabled>
+          🚀 嵌入水印并下载
+        </button>
+        <button class="btn btn-secondary" onclick="clearEmbed()">🗑️ 清空</button>
+      </div>
+      <div class="log" id="embed-log"></div>
+    </div>
+  </div>
+
+  <!-- ===== 提取面板 ===== -->
+  <div class="panel" id="panel-extract">
+    <div class="card">
+      <h3>上传含水印的图片</h3>
+      <div class="upload-area" id="upload-extract" onclick="document.getElementById('file-extract').click()">
+        <input type="file" id="file-extract" accept="image/*" onchange="onExtractFile(event)">
+        <div class="icon">🔍</div>
+        <div class="text">点击或拖拽图片到这里</div>
+        <div class="hint">支持 JPG / PNG / BMP / WebP</div>
+      </div>
+      <div id="extract-preview" style="display:none">
+        <div class="preview-box">
+          <div class="preview-item">
+            <img id="extract-img-preview">
+            <div class="preview-label">待提取图片</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>提取设置</h3>
+      <div class="form-group">
+        <label>水印类型</label>
+        <div class="radio-group">
+          <label><input type="radio" name="ext-type" value="text" checked> 文本</label>
+          <label><input type="radio" name="ext-type" value="binary"> 二进制</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>嵌入强度（需与嵌入时一致）</label>
+        <div class="slider-group">
+          <input type="range" id="ext-strength" min="1" max="3" value="1" step="1" oninput="document.getElementById('ext-strength-label').textContent=this.value+' bit'">
+          <span class="slider-val" id="ext-strength-label">1 bit</span>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btn-extract" onclick="doExtract()" disabled>
+          🔍 提取水印
+        </button>
+      </div>
+      <div class="extract-result" id="extract-result"></div>
+      <div class="log" id="extract-log"></div>
+    </div>
+  </div>
+
+  <!-- ===== 原理面板 ===== -->
+  <div class="panel" id="panel-about">
+    <div class="card">
+      <h3>🔐 LSB 隐写术原理</h3>
+      <p style="color:var(--muted);line-height:1.8;font-size:0.9rem">
+        <strong style="color:var(--accent)">LSB（Least Significant Bit）</strong>即最低有效位隐写。
+        每个像素由 R、G、B 三个通道组成，每个通道占 8 bit（值 0~255）。
+        将水印信息嵌入到像素的最低位（第 0 bit），像素值最多变化 ±1，
+        <strong style="color:var(--success)">肉眼完全无法察觉</strong>。
+      </p>
+      <br>
+      <h3>📐 嵌入过程</h3>
+      <p style="color:var(--muted);line-height:1.8;font-size:0.9rem">
+        1. 将水印文本转为二进制比特流<br>
+        2. 遍历图片像素的 RGB 通道<br>
+        3. 将每个通道的最低位替换为水印比特<br>
+        4. 输出处理后的图片
+      </p>
+      <br>
+      <h3>📊 容量与限制</h3>
+      <div class="stats">
+        <div class="stat-item"><div class="val" id="about-cap-1">-</div><div class="lbl">1bit 容量 (每像素)</div></div>
+        <div class="stat-item"><div class="val" id="about-cap-8">-</div><div class="lbl">可嵌入字节数 (1000×1000)</div></div>
+        <div class="stat-item"><div class="val">不可见</div><div class="lbl">1 bit 强度视觉影响</div></div>
+        <div class="stat-item"><div class="val">⚠️ 脆弱</div><div class="lbl">JPEG 压缩可能破坏</div></div>
+      </div>
+      <br>
+      <h3>⚠️ 注意事项</h3>
+      <p style="color:var(--muted);line-height:1.8;font-size:0.9rem">
+        • 建议使用 <strong style="color:var(--text)">PNG 格式</strong>输出，JPEG 有损压缩会破坏 LSB 水印<br>
+        • 强度 1 bit 最安全但抗攻击能力弱；强度 2~3 bit 更鲁棒但可能出现可见痕迹<br>
+        • 提取时必须知道嵌入强度，否则无法正确还原<br>
+        • 本工具所有处理在浏览器本地完成，<strong style="color:var(--success)">不会上传任何数据到服务器</strong>
+      </p>
+      <br>
+      <h3>🛠️ 技术实现</h3>
+      <p style="color:var(--muted);line-height:1.8;font-size:0.9rem">
+        使用 HTML5 Canvas API 直接操作 ImageData 像素数据。
+        水印编码：UTF-8 文本 → 字节数组 → 二进制比特流 → 嵌入像素 RGB 通道。
+        安全校验：嵌入前后添加 32 字节 magic header 用于验证。
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden canvas for processing -->
+<canvas id="work-canvas" style="display:none"></canvas>
+
+<script>
+// ===== Tab switching =====
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+}
+
+// ===== Embed logic =====
+let embedImgData = null;
+
+function toggleWmType() {
+  const isText = document.querySelector('input[name="wm-type"]:checked').value === 'text';
+  document.getElementById('wm-text-group').style.display = isText ? '' : 'none';
+  document.getElementById('wm-binary-group').style.display = isText ? 'none' : '';
+}
+
+function updateStrengthLabel() {
+  document.getElementById('strength-label').textContent = document.getElementById('wm-strength').value + ' bit';
+}
+
+// Drag & drop
+['upload-embed', 'upload-extract'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+  el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('dragover');
+    if (e.dataTransfer.files.length) {
+      const input = el.querySelector('input[type="file"]');
+      input.files = e.dataTransfer.files;
+      input.dispatchEvent(new Event('change'));
+    }
+  });
+});
+
+function onEmbedFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    embedImgData = { img, file, width: img.width, height: img.height };
+    document.getElementById('embed-img-preview').src = img.src;
+    document.getElementById('embed-preview').style.display = '';
+
+    // Draw preview on canvas
+    const canvas = document.getElementById('embed-canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+
+    // Stats
+    const totalPixels = img.width * img.height;
+    const bitsPerChannel = parseInt(document.getElementById('wm-strength').value);
+    const capacityBytes = Math.floor((totalPixels * 3 * bitsPerChannel) / 8);
+    document.getElementById('embed-stats').innerHTML = `
+      <div class="stat-item"><div class="val">${img.width}×${img.height}</div><div class="lbl">尺寸</div></div>
+      <div class="stat-item"><div class="val">${(totalPixels / 1000000).toFixed(2)}M</div><div class="lbl">总像素</div></div>
+      <div class="stat-item"><div class="val">${capacityBytes}</div><div class="lbl">最大容量 (bytes)</div></div>
+    `;
+
+    document.getElementById('btn-embed').disabled = false;
+    logMsg('embed-log', `✅ 图片已加载: ${file.name} (${img.width}×${img.height})`);
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+function logMsg(id, msg) {
+  const el = document.getElementById(id);
+  el.classList.add('visible');
+  el.textContent += msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+// ===== LSB Embed =====
+function textToBits(text) {
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(text);
+  const bits = [];
+  for (const b of bytes) {
+    for (let i = 7; i >= 0; i--) {
+      bits.push((b >> i) & 1);
+    }
+  }
+  return { bits, byteLength: bytes.length };
+}
+
+function doEmbed() {
+  if (!embedImgData) return;
+
+  const canvas = document.getElementById('work-canvas');
+  canvas.width = embedImgData.width;
+  canvas.height = embedImgData.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(embedImgData.img, 0, 0);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imgData.data; // Uint8ClampedArray [r,g,b,a,r,g,b,a,...]
+
+  // Build watermark payload
+  const isText = document.querySelector('input[name="wm-type"]:checked').value === 'text';
+  let dataBytes;
+  if (isText) {
+    const text = document.getElementById('wm-text').value;
+    if (!text) { alert('请输入水印文本'); return; }
+    dataBytes = new TextEncoder().encode(text);
+  } else {
+    const hex = document.getElementById('wm-binary').value.replace(/\s/g, '');
+    if (!hex || hex.length % 2 !== 0) { alert('请输入有效的十六进制数据'); return; }
+    dataBytes = new Uint8Array(hex.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+  }
+
+  // Magic header: "WMKS" + 4-byte length + data
+  const header = new Uint8Array([0x57, 0x4D, 0x4B, 0x53]); // "WMKS"
+  const lenBytes = new Uint8Array(4);
+  lenBytes[0] = (dataBytes.length >> 24) & 0xFF;
+  lenBytes[1] = (dataBytes.length >> 16) & 0xFF;
+  lenBytes[2] = (dataBytes.length >> 8) & 0xFF;
+  lenBytes[3] = dataBytes.length & 0xFF;
+
+  const payload = new Uint8Array(header.length + lenBytes.length + dataBytes.length);
+  payload.set(header, 0);
+  payload.set(lenBytes, header.length);
+  payload.set(dataBytes, header.length + lenBytes.length);
+
+  // Convert payload to bits
+  const allBits = [];
+  for (const byte of payload) {
+    for (let i = 7; i >= 0; i--) {
+      allBits.push((byte >> i) & 1);
+    }
+  }
+
+  const strength = parseInt(document.getElementById('wm-strength').value);
+  const maxBits = Math.floor((pixels.length / 4) * 3 * strength); // RGBA -> 3 channels per pixel
+
+  if (allBits.length > maxBits) {
+    alert(`水印数据太大！需要 ${allBits.length} bits，图片最大容量 ${maxBits} bits`);
+    return;
+  }
+
+  // Embed bits
+  logMsg('embed-log', `📦 水印大小: ${dataBytes.length} bytes, ${allBits.length} bits`);
+  logMsg('embed-log', `🔧 嵌入强度: ${strength} bit`);
+
+  let bitIdx = 0;
+  for (let i = 0; i < pixels.length && bitIdx < allBits.length; i += 4) {
+    // R channel
+    if (bitIdx < allBits.length) {
+      pixels[i] = (pixels[i] & ~(1 << (strength - 1))) | (allBits[bitIdx] << (strength - 1));
+      bitIdx++;
+    }
+    // G channel
+    if (bitIdx < allBits.length) {
+      pixels[i + 1] = (pixels[i + 1] & ~(1 << (strength - 1))) | (allBits[bitIdx] << (strength - 1));
+      bitIdx++;
+    }
+    // B channel
+    if (bitIdx < allBits.length) {
+      pixels[i + 2] = (pixels[i + 2] & ~(1 << (strength - 1))) | (allBits[bitIdx] << (strength - 1));
+      bitIdx++;
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+
+  // Update preview
+  document.getElementById('embed-canvas').width = canvas.width;
+  document.getElementById('embed-canvas').height = canvas.height;
+  document.getElementById('embed-canvas').getContext('2d').drawImage(canvas, 0, 0);
+
+  // Download
+  const format = document.getElementById('output-format').value;
+  const mimeType = format === 'jpeg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
+  const ext = format === 'jpeg' ? 'jpg' : format;
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `watermarked_${Date.now()}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    logMsg('embed-log', `✅ 水印已嵌入并开始下载 (${a.download})`);
+    logMsg('embed-log', `📊 文件大小: ${(blob.size / 1024).toFixed(1)} KB`);
+  }, mimeType, 0.95);
+}
+
+function clearEmbed() {
+  embedImgData = null;
+  document.getElementById('file-embed').value = '';
+  document.getElementById('embed-preview').style.display = 'none';
+  document.getElementById('btn-embed').disabled = true;
+  document.getElementById('embed-log').classList.remove('visible');
+  document.getElementById('embed-log').textContent = '';
+}
+
+// ===== Extract logic =====
+let extractImgData = null;
+
+function onExtractFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    extractImgData = { img, file, width: img.width, height: img.height };
+    document.getElementById('extract-img-preview').src = img.src;
+    document.getElementById('extract-preview').style.display = '';
+    document.getElementById('btn-extract').disabled = false;
+    document.getElementById('extract-result').classList.remove('visible');
+    logMsg('extract-log', `✅ 图片已加载: ${file.name}`);
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+function bitsToBytes(bits) {
+  const bytes = [];
+  for (let i = 0; i < bits.length; i += 8) {
+    let b = 0;
+    for (let j = 0; j < 8 && (i + j) < bits.length; j++) {
+      b = (b << 1) | bits[i + j];
+    }
+    bytes.push(b);
+  }
+  return new Uint8Array(bytes);
+}
+
+function doExtract() {
+  if (!extractImgData) return;
+
+  const canvas = document.getElementById('work-canvas');
+  canvas.width = extractImgData.width;
+  canvas.height = extractImgData.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(extractImgData.img, 0, 0);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imgData.data;
+
+  const strength = parseInt(document.getElementById('ext-strength').value);
+  const isText = document.querySelector('input[name="ext-type"]:checked').value === 'text';
+
+  // Extract bits
+  logMsg('extract-log', `🔍 开始提取 (强度: ${strength} bit)...`);
+
+  const extractedBits = [];
+  for (let i = 0; i < pixels.length; i += 4) {
+    // R
+    extractedBits.push((pixels[i] >> (strength - 1)) & 1);
+    // G
+    extractedBits.push((pixels[i + 1] >> (strength - 1)) & 1);
+    // B
+    extractedBits.push((pixels[i + 2] >> (strength - 1)) & 1);
+  }
+
+  // Extract enough bits for header (5 bytes = 40 bits) first
+  if (extractedBits.length < 40) {
+    logMsg('extract-log', '❌ 图片太小，无法提取');
+    return;
+  }
+
+  const headerByte = bitsToBytes(extractedBits.slice(0, 32));
+  // Check magic: "WMKS"
+  if (headerByte[0] !== 0x57 || headerByte[1] !== 0x4D || headerByte[2] !== 0x4B || headerByte[3] !== 0x53) {
+    const result = document.getElementById('extract-result');
+    result.textContent = '⚠️ 未检测到水印（magic header 不匹配）。\n\n可能原因：\n1. 图片未嵌入水印\n2. 嵌入强度不匹配\n3. 图片被压缩/裁剪过';
+    result.classList.add('visible');
+    result.style.color = 'var(--accent2)';
+    logMsg('extract-log', '❌ 未检测到水印');
+    return;
+  }
+
+  // Read length
+  const lenBits = extractedBits.slice(32, 64);
+  const lenBytes = bitsToBytes(lenBits);
+  const dataLen = (lenBytes[0] << 24) | (lenBytes[1] << 16) | (lenBytes[2] << 8) | lenBytes[3];
+
+  if (dataLen <= 0 || dataLen > 100000) {
+    logMsg('extract-log', `❌ 无效的数据长度: ${dataLen}`);
+    return;
+  }
+
+  // Read data
+  const totalBitsNeeded = (4 + 4 + dataLen) * 8;
+  if (extractedBits.length < totalBitsNeeded) {
+    logMsg('extract-log', `⚠️ 图片容量不足，需要 ${totalBitsNeeded} bits`);
+    return;
+  }
+
+  const dataBits = extractedBits.slice(64, 64 + dataLen * 8);
+  const dataBytes = bitsToBytes(dataBits);
+
+  const result = document.getElementById('extract-result');
+  if (isText) {
+    try {
+      const decoder = new TextDecoder('utf-8', { fatal: true });
+      const text = decoder.decode(dataBytes);
+      result.innerHTML = `<strong style="color:var(--success)">✅ 提取成功！</strong><br><br>` +
+        `<strong>水印内容：</strong><br><span style="font-size:1.1rem;color:var(--text)">${escapeHtml(text)}</span><br><br>` +
+        `<span style="color:var(--muted)">数据长度: ${dataLen} bytes</span>`;
+    } catch {
+      result.innerHTML = `<strong style="color:var(--accent2)">⚠️ 提取到数据但不是有效文本</strong><br><br>` +
+        `<span style="color:var(--muted)">原始数据 (hex): ${[...dataBytes].map(b => b.toString(16).padStart(2, '0')).join(' ')}</span>`;
+    }
+  } else {
+    const hex = [...dataBytes].map(b => b.toString(16).padStart(2, '0')).join('');
+    result.innerHTML = `<strong style="color:var(--success)">✅ 提取成功！</strong><br><br>` +
+      `<strong>十六进制：</strong><br><span style="font-family:monospace">${hex}</span><br><br>` +
+      `<span style="color:var(--muted)">数据长度: ${dataLen} bytes</span>`;
+  }
+  result.classList.add('visible');
+  result.style.color = '';
+
+  logMsg('extract-log', `✅ 提取完成: ${dataLen} bytes`);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ===== About stats =====
+function updateAboutStats() {
+  document.getElementById('about-cap-1').textContent = '3 bits';
+  document.getElementById('about-cap-8').textContent = `${Math.floor(1000 * 1000 * 3 / 8).toLocaleString()} B`;
+}
+updateAboutStats();
+</script>
+</body>
+</html>
